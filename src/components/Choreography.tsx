@@ -16,15 +16,34 @@ export function Choreography() {
     mm.add("all", () => {
       /* ---------- Empilement ---------- */
       const panels = gsap.utils.toArray<HTMLElement>(".panel");
+      const spacers: HTMLElement[] = [];
+
+      // Une section plus haute que l'écran se fige quand son bas arrive en bas de l'écran.
+      // Sans pause, la suivante la recouvrirait aussitôt et son contenu du bas (cartes, tarifs)
+      // ne serait jamais vu en entier : on insère donc un temps de pause invisible derrière elle.
+      const sizeSpacers = () =>
+        spacers.forEach((s, i) => {
+          const tall = panels[i].offsetHeight > window.innerHeight + 2;
+          s.style.height = tall ? `${Math.round(window.innerHeight * 0.45)}px` : "0px";
+        });
+      ScrollTrigger.addEventListener("refreshInit", sizeSpacers);
+
       panels.forEach((panel, i) => {
         panel.style.zIndex = String(i + 1);
         const next = panels[i + 1];
         if (!next) return;
 
+        const spacer = document.createElement("div");
+        spacer.setAttribute("aria-hidden", "true");
+        spacer.className = "panel-hold";
+        panel.after(spacer);
+        spacers.push(spacer);
+
+        sizeSpacers();
         ScrollTrigger.create({
           trigger: panel,
-          start: () => (panel.offsetHeight <= window.innerHeight ? "top top" : "bottom bottom"),
-          end: () => "+=" + next.offsetHeight,
+          start: () => (panel.offsetHeight <= window.innerHeight + 2 ? "top top" : "bottom bottom"),
+          end: () => "+=" + (next.offsetHeight + spacer.offsetHeight),
           pin: true,
           pinSpacing: false,
           invalidateOnRefresh: true,
@@ -160,7 +179,11 @@ export function Choreography() {
       // Recalcule une fois les polices chargées (les hauteurs de lignes changent).
       document.fonts?.ready.then(() => ScrollTrigger.refresh());
 
-      return () => splits.forEach((s) => s.revert());
+      return () => {
+        splits.forEach((s) => s.revert());
+        ScrollTrigger.removeEventListener("refreshInit", sizeSpacers);
+        spacers.forEach((s) => s.remove());
+      };
     });
   });
 

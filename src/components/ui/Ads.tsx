@@ -129,6 +129,7 @@ export function SearchAd({
   image,
   imageAlt,
   rotate = 0,
+  hover = true,
 }: {
   domain: string;
   title: string;
@@ -137,9 +138,10 @@ export function SearchAd({
   image: string;
   imageAlt: string;
   rotate?: number;
+  hover?: boolean;
 }) {
   return (
-    <article className="ad is-hover" style={{ ["--r" as string]: `${rotate}deg` }} aria-label={`Exemple d'annonce Google Search : ${domain}`}>
+    <article className={`ad ${hover ? "is-hover" : ""}`} style={{ ["--r" as string]: `${rotate}deg` }} aria-label={`Exemple d'annonce Google Search : ${domain}`}>
       <div className="ad-photo relative overflow-hidden" style={{ aspectRatio: "16 / 10" }}>
         <Image src={image} alt={imageAlt} fill sizes="300px" className="object-cover" />
       </div>
