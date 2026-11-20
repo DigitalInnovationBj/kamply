@@ -59,7 +59,7 @@ export default async function DashboardPage() {
           <PerformanceChart series={stats.series} hasData={stats.hasData} />
         </div>
 
-        <div className="rise grid content-start gap-4" style={{ animationDelay: ".15s" }}>
+        <div className="rise grid min-w-0 content-start gap-4" style={{ animationDelay: ".15s" }}>
           <Link href="/app/portefeuille" className="group block rounded-[24px] bg-black p-5 text-[#f5f5f3] no-underline transition-transform duration-500 ease-[cubic-bezier(.16,1,.3,1)] hover:-translate-y-1">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#a3a3a0]">Solde disponible</span>

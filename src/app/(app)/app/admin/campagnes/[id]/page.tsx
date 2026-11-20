@@ -48,7 +48,7 @@ export default async function AdminCampaignPage({ params }: PageProps<"/app/admi
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="grid min-w-0 content-start gap-4">
+        <div className="grid min-w-0 content-start gap-4 [&>*]:min-w-0">
           <section className="rise rounded-[24px] bg-card p-5 sm:p-6" aria-label="Décision">
             <h2 className="mb-1 flex items-center gap-2 text-lg font-black tracking-[-0.02em]">
               <IconShieldCheck size={20} /> Décision
@@ -77,7 +77,7 @@ export default async function AdminCampaignPage({ params }: PageProps<"/app/admi
           </section>
         </div>
 
-        <aside className="grid content-start gap-4">
+        <aside className="grid min-w-0 content-start gap-4">
           <AdPreview channel={c.channel} company={c.user.companyName || c.user.name} headline={c.headline} description={c.description} landingUrl={c.landingUrl} imageUrl={c.imageUrl} />
           <dl className="grid gap-px overflow-hidden rounded-[24px] bg-border text-sm">
             {[

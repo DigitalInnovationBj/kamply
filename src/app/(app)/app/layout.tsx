@@ -23,7 +23,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
       <AppSidebar user={user} badges={badges ? { pendingCampaigns: badges.pendingCampaigns, pendingTopups: badges.pendingTopups } : undefined} />
       <SidebarInset className="min-w-0 bg-background">
         <AppTopbar user={user} />
-        <div className="mx-auto w-full max-w-[1200px] flex-1 px-4 pb-32 pt-6 sm:px-6 md:pb-12 lg:px-8">{children}</div>
+        <div className="mx-auto w-full min-w-0 max-w-[1200px] flex-1 overflow-x-clip px-4 pb-32 pt-6 sm:px-6 md:pb-12 lg:px-8">{children}</div>
       </SidebarInset>
       <BottomNav />
     </SidebarProvider>

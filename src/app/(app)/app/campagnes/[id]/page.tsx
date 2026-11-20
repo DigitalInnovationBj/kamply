@@ -65,7 +65,7 @@ export default async function CampaignPage({ params }: PageProps<"/app/campagnes
         <div className="rise min-w-0" style={{ animationDelay: ".1s" }}>
           <PerformanceChart series={stats.series} hasData={stats.hasData} />
         </div>
-        <div className="rise grid content-start gap-4" style={{ animationDelay: ".15s" }}>
+        <div className="rise grid min-w-0 content-start gap-4" style={{ animationDelay: ".15s" }}>
           <AdPreview channel={c.channel} company={user.companyName || user.name} headline={c.headline} description={c.description} landingUrl={c.landingUrl} imageUrl={c.imageUrl} />
           <dl className="grid gap-px overflow-hidden rounded-[24px] bg-border text-sm">
             {[

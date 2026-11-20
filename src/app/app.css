@@ -83,6 +83,18 @@
     color: var(--foreground);
     padding-right: 16px;
   }
+  /* iOS : le champ date impose sa largeur native et déborde */
+  .kf-input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    display: flex;
+    align-items: center;
+  }
+  .kf-input::-webkit-date-and-time-value {
+    text-align: left;
+    margin: 0;
+  }
   .kf-input::placeholder {
     color: #a3a3a0;
   }
