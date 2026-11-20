@@ -69,7 +69,7 @@ export function StepWrite() {
           <SearchAd
             rotate={1.5}
             domain="maisonlune.com"
-            title="Fleuriste à Paris — Livraison en 3 h, 7 j/7"
+            title="Fleuriste à Paris | Livraison en 3 h, 7 j/7"
             text="Bouquets frais composés à la main. Roses, pivoines, compositions de saison. Commandez avant 16 h, livré aujourd'hui."
             links={["Bouquets", "Mariage", "Abonnement"]}
             image={FLOWERS.purple}
@@ -108,7 +108,7 @@ export function StepWrite() {
           <SearchAd
             rotate={1}
             domain="lumen-dentaire.fr"
-            title="Dentiste à Lyon 6e — Rendez-vous sous 48 h"
+            title="Dentiste à Lyon 6e | Rendez-vous sous 48 h"
             text="Soins, blanchiment, implants. Cabinet moderne, tiers payant. Prenez rendez-vous en ligne en 2 minutes."
             links={["Prendre RDV", "Tarifs", "Urgences"]}
             image={PHOTOS.dentist}

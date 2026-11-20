@@ -30,3 +30,7 @@ pnpm start
 
 - Les photos de l'exemple Maison Lune viennent d'Unsplash (licence Unsplash).
 - Robinco © Asenbayu : vérifier la licence commerciale avant la mise en production.
+
+## Domaine
+
+Le domaine définitif se règle avec la variable d'environnement `NEXT_PUBLIC_SITE_URL` (ex. `https://kamply.com`) dans Vercel. Elle alimente les métadonnées, l'URL canonique, l'image de partage, `sitemap.xml` et `robots.txt`. Sans elle, le site utilise `https://kamply-platform.vercel.app`.

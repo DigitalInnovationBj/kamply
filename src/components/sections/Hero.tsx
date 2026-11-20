@@ -30,7 +30,7 @@ export function Hero() {
             <SearchAd
               hover={false}
               domain="lumen-dentaire.fr"
-              title="Dentiste à Lyon 6e — Rendez-vous sous 48 h"
+              title="Dentiste à Lyon 6e | Rendez-vous sous 48 h"
               text="Soins, blanchiment, implants. Prenez rendez-vous en ligne en 2 minutes."
               links={["Prendre RDV", "Tarifs"]}
               image={PHOTOS.dentist}
