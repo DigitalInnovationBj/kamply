@@ -12,7 +12,11 @@ export function Hero() {
         <h1 className="display t-mega m-0 relative z-[2]" data-split="load">
           Vos pubs
           <br />
-          <span style={{ color: "#ff5b23" }}>Google &amp; Meta</span>
+          <span style={{ color: "#ff5b23" }}>
+            Google
+            <br />
+            &amp; Meta
+          </span>
           <br />
           en 5 min.
         </h1>

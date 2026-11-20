@@ -28,7 +28,7 @@ export function Island() {
   // Entrée : l'île descend depuis le haut une fois la page prête.
   useEffect(() => {
     const el = islandRef.current;
-    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!el) return;
     gsap.fromTo(el, { yPercent: -160, scale: 0.86 }, { yPercent: 0, scale: 1, duration: 1.3, delay: 0.25, ease: "expo.out" });
   }, []);
 

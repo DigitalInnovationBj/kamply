@@ -8,6 +8,14 @@ export const FLOWERS = {
   purple: "https://images.unsplash.com/photo-1767866443531-28c3539b8223",
 } as const;
 
+export const PHOTOS = {
+  gym: "https://images.unsplash.com/photo-1639660299469-9e9279364c97",
+  coffee: "https://images.unsplash.com/photo-1485808191679-5f86510681a2",
+  earrings: "https://images.unsplash.com/photo-1619203451989-53f6d2ca0e57",
+  pearls: "https://images.unsplash.com/photo-1654699991520-aaaf4dd2608b",
+  dentist: "https://images.unsplash.com/photo-1643660526741-094639fbe53a",
+} as const;
+
 type MetaAdProps = {
   name: string;
   initials: string;
@@ -80,15 +88,29 @@ export function MetaAd({
   );
 }
 
-/** Visuel photo plein cadre (pour les annonces Maison Lune). */
-export function PhotoVisual({ src, alt, kicker, title, priority }: { src: string; alt: string; kicker: string; title: string; priority?: boolean }) {
+/** Visuel photo plein cadre avec titre en surimpression. */
+export function PhotoVisual({
+  src,
+  alt,
+  kicker,
+  title,
+  priority,
+  accent = "#ff5b23",
+}: {
+  src: string;
+  alt: string;
+  kicker: string;
+  title: string;
+  priority?: boolean;
+  accent?: string;
+}) {
   return (
     <>
       <div className="ad-photo absolute inset-0">
         <Image src={src} alt={alt} fill sizes="300px" priority={priority} className="object-cover" />
       </div>
       <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,.72) 100%)" }} aria-hidden="true" />
-      <div className="ad-visual-kicker" style={{ color: "#ff5b23" }}>
+      <div className="ad-visual-kicker" style={{ color: accent }}>
         {kicker}
       </div>
       <div className="ad-visual-title" style={{ color: "#f5f5f3" }}>
@@ -98,11 +120,30 @@ export function PhotoVisual({ src, alt, kicker, title, priority }: { src: string
   );
 }
 
-/** Annonce Google Search. */
-export function SearchAd({ domain, title, text, links, rotate = 0 }: { domain: string; title: string; text: string; links: string[]; rotate?: number }) {
+/** Annonce Google Search, avec élément image (asset image Google Ads). */
+export function SearchAd({
+  domain,
+  title,
+  text,
+  links,
+  image,
+  imageAlt,
+  rotate = 0,
+}: {
+  domain: string;
+  title: string;
+  text: string;
+  links: string[];
+  image: string;
+  imageAlt: string;
+  rotate?: number;
+}) {
   return (
     <article className="ad is-hover" style={{ ["--r" as string]: `${rotate}deg` }} aria-label={`Exemple d'annonce Google Search : ${domain}`}>
-      <div style={{ padding: "18px 18px 16px" }}>
+      <div className="ad-photo relative overflow-hidden" style={{ aspectRatio: "16 / 10" }}>
+        <Image src={image} alt={imageAlt} fill sizes="300px" className="object-cover" />
+      </div>
+      <div style={{ padding: "16px 18px 16px" }}>
         <div className="flex items-center gap-2" style={{ font: "600 12px/1.2 var(--font-sans)", color: "#5c5c58" }}>
           <span style={{ padding: "2px 6px", borderRadius: 4, background: "#ebebe7", color: "#0a0a0a", fontWeight: 800 }}>Sponsorisé</span>
           {domain}
@@ -131,7 +172,7 @@ export function ShoppingAd({
   rotate = 0,
 }: {
   domain: string;
-  products: { name: string; price: string; visual: ReactNode; bg: string }[];
+  products: { name: string; price: string; image: string; alt: string }[];
   rotate?: number;
 }) {
   return (
@@ -144,8 +185,8 @@ export function ShoppingAd({
         <div className="grid grid-cols-2 gap-2.5" style={{ marginTop: 12 }}>
           {products.map((p) => (
             <div key={p.name}>
-              <div className="relative overflow-hidden" style={{ aspectRatio: "1 / 1", borderRadius: 10, background: p.bg }}>
-                {p.visual}
+              <div className="ad-photo relative overflow-hidden" style={{ aspectRatio: "1 / 1", borderRadius: 10, background: "#ebebe7" }}>
+                <Image src={p.image} alt={p.alt} fill sizes="140px" className="object-cover" />
               </div>
               <div style={{ font: "600 13px/1.3 var(--font-sans)", marginTop: 8 }}>{p.name}</div>
               <div style={{ font: "800 14px/1 var(--font-sans)", marginTop: 4 }}>{p.price}</div>

@@ -13,7 +13,7 @@ export function Choreography() {
   useGSAP(() => {
     const mm = gsap.matchMedia();
 
-    mm.add("(prefers-reduced-motion: no-preference)", () => {
+    mm.add("all", () => {
       /* ---------- Empilement ---------- */
       const panels = gsap.utils.toArray<HTMLElement>(".panel");
       panels.forEach((panel, i) => {

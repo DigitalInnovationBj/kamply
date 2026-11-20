@@ -21,7 +21,6 @@ export function TypingDemo() {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const timers: number[] = [];
     const at = (fn: () => void, ms: number) => timers.push(window.setTimeout(fn, ms));
     let running = false;
@@ -44,10 +43,7 @@ export function TypingDemo() {
       ([entry]) => {
         if (entry.isIntersecting && !running) {
           running = true;
-          if (reduce) {
-            setTyped(URL_DEMO);
-            setStep(3);
-          } else run();
+          run();
         }
         if (!entry.isIntersecting && running) {
           running = false;

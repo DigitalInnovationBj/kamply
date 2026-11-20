@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Panel } from "@/components/ui/Panel";
-import { MetaAd, PhotoVisual, SearchAd, ShoppingAd, FLOWERS } from "@/components/ui/Ads";
+import { MetaAd, PhotoVisual, SearchAd, ShoppingAd, FLOWERS, PHOTOS } from "@/components/ui/Ads";
 import { TypingDemo } from "./TypingDemo";
 import { DragScroll } from "./DragScroll";
 
@@ -72,6 +72,8 @@ export function StepWrite() {
             title="Fleuriste à Paris — Livraison en 3 h, 7 j/7"
             text="Bouquets frais composés à la main. Roses, pivoines, compositions de saison. Commandez avant 16 h, livré aujourd'hui."
             links={["Bouquets", "Mariage", "Abonnement"]}
+            image={FLOWERS.purple}
+            imageAlt="Bouquets de fleurs violettes et feuillage"
           />
           <MetaAd
             name="Atlas Fitness"
@@ -79,15 +81,7 @@ export function StepWrite() {
             avatar={{ background: "#ff5b23", color: "#000" }}
             copy="Votre première semaine est offerte."
             rotate={-1}
-            visualStyle={{ background: "#f5f5f3", color: "#000" }}
-            visual={
-              <>
-                <div className="absolute rounded-full" style={{ left: -40, top: -40, width: 220, height: 220, background: "#18cccd" }} />
-                <div className="absolute rounded-full" style={{ right: 24, top: 34, width: 70, height: 70, background: "#000" }} />
-                <div className="ad-visual-kicker">Ouvert 7 j/7 · 6 h – 23 h</div>
-                <div className="ad-visual-title">Le sport, sans l&apos;excuse.</div>
-              </>
-            }
+            visual={<PhotoVisual src={PHOTOS.gym} alt="Femme soulevant une barre dans une salle de sport" kicker="Ouvert 7 j/7 · 6 h – 23 h" title="Le sport, sans l'excuse." accent="#18cccd" />}
             url="atlas-fitness.fr"
             cta="Réserver ma séance"
             button="S'inscrire"
@@ -96,23 +90,8 @@ export function StepWrite() {
             rotate={2}
             domain="pepite-bijoux.com"
             products={[
-              {
-                name: "Créoles or 18 carats",
-                price: "89,00 €",
-                bg: "#ff5b23",
-                visual: <div className="absolute rounded-full" style={{ left: "50%", top: "50%", width: 60, height: 60, border: "8px solid #000", transform: "translate(-50%,-50%)" }} />,
-              },
-              {
-                name: "Pendentif perle",
-                price: "54,00 €",
-                bg: "#18cccd",
-                visual: (
-                  <>
-                    <div className="absolute" style={{ left: "50%", top: "28%", width: 6, height: 50, background: "#000", transform: "translateX(-50%)" }} />
-                    <div className="absolute rounded-full" style={{ left: "50%", top: "62%", width: 26, height: 26, background: "#000", transform: "translateX(-50%)" }} />
-                  </>
-                ),
-              },
+              { name: "Créoles or et diamants", price: "189,00 €", image: PHOTOS.earrings, alt: "Créoles en or ornées de diamants" },
+              { name: "Collier de perles", price: "129,00 €", image: PHOTOS.pearls, alt: "Collier de perles en gros plan" },
             ]}
           />
           <MetaAd
@@ -121,16 +100,7 @@ export function StepWrite() {
             avatar={{ background: "#18cccd", color: "#000" }}
             copy="Café de spécialité, torréfié chaque semaine."
             rotate={-2.5}
-            visualStyle={{ background: "#000", color: "#f5f5f3" }}
-            visual={
-              <>
-                <div className="absolute rounded-full" style={{ right: -30, top: -30, width: 200, height: 200, border: "26px solid #18cccd" }} />
-                <div className="ad-visual-kicker" style={{ color: "#ff5b23" }}>
-                  Abonnement dès 14 €
-                </div>
-                <div className="ad-visual-title">Le bon café, chez vous chaque mois.</div>
-              </>
-            }
+            visual={<PhotoVisual src={PHOTOS.coffee} alt="Tasse de café latte" kicker="Abonnement dès 14 €" title="Le bon café, chez vous chaque mois." />}
             url="novacoffee.co"
             cta="Découvrir l'abonnement"
             button="S'abonner"
@@ -141,6 +111,8 @@ export function StepWrite() {
             title="Dentiste à Lyon 6e — Rendez-vous sous 48 h"
             text="Soins, blanchiment, implants. Cabinet moderne, tiers payant. Prenez rendez-vous en ligne en 2 minutes."
             links={["Prendre RDV", "Tarifs", "Urgences"]}
+            image={PHOTOS.dentist}
+            imageAlt="Fauteuil de cabinet dentaire moderne"
           />
         </div>
       </DragScroll>

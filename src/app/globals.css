@@ -66,7 +66,7 @@ body {
   font-variant-ligatures: common-ligatures;
 }
 .t-mega {
-  font-size: clamp(64px, 10.8vw, 190px);
+  font-size: clamp(76px, 12.5vw, 220px);
   line-height: 0.8;
 }
 .t-big {
@@ -466,6 +466,9 @@ body {
 }
 .ad.is-hover:hover .ad-photo img {
   transform: scale(1.07);
+}
+.ad-photo {
+  overflow: hidden;
 }
 .ad-head {
   display: flex;
@@ -893,13 +896,5 @@ body {
   padding-right: 44px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-  }
-}
 
 }
