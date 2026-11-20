@@ -1,6 +1,6 @@
 # KAMPLY
 
-Site vitrine de KAMPLY — campagnes Google Ads et Meta Ads créées par l'IA.
+Site vitrine de KAMPLY : campagnes Google Ads et Meta Ads créées par l'IA.
 
 ## Stack
 

@@ -8,7 +8,6 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 const ORANGE = "#ff5b23";
-const TURQUOISE = "#18cccd";
 const PAPER = "#f5f5f3";
 
 export default async function Image() {
@@ -34,30 +33,6 @@ export default async function Image() {
           overflow: "hidden",
         }}
       >
-        {/* Formes de marque : le K diagonal orange et le bloc turquoise */}
-        <div
-          style={{
-            position: "absolute",
-            right: 70,
-            top: -60,
-            width: 230,
-            height: 760,
-            background: ORANGE,
-            transform: "skewX(-18deg)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            right: 200,
-            top: 360,
-            width: 160,
-            height: 160,
-            borderRadius: 32,
-            background: TURQUOISE,
-          }}
-        />
-
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: "100%", position: "relative" }}>
           <img src={logo} alt="" height={46} style={{ height: 46 }} />
 
@@ -67,8 +42,8 @@ export default async function Image() {
             <span>en 5 min.</span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 18, fontSize: 30, textTransform: "uppercase", letterSpacing: 1 }}>
-            <span style={{ display: "flex", background: TURQUOISE, color: "#000", padding: "10px 18px 6px" }}>Dès 149 € / mois</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", fontSize: 30, textTransform: "uppercase", letterSpacing: 1 }}>
+            <span style={{ color: "#a3a3a0" }}>Campagnes créées par l&apos;IA</span>
             <span style={{ color: "#a3a3a0" }}>{host}</span>
           </div>
         </div>
