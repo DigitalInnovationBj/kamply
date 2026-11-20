@@ -40,6 +40,8 @@ model User {
   accounts     Account[]
   campaigns    Campaign[]
   wallet       Wallet?
+  adminEmails  AdminEmail[]
+  aiRuns       AiRun[]
   processedTxs WalletTransaction[] @relation("ProcessedBy")
 
   @@map("user")
@@ -220,4 +222,37 @@ model WalletTransaction {
   @@index([walletId])
   @@index([status])
   @@map("wallet_transaction")
+}
+
+/// Historique des e-mails envoyés depuis l'administration.
+model AdminEmail {
+  id         String   @id @default(cuid())
+  subject    String
+  title      String?
+  body       String
+  ctaLabel   String?
+  ctaUrl     String?
+  audience   String
+  recipients Int
+  failed     Int      @default(0)
+  sentById   String
+  sentBy     User     @relation(fields: [sentById], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("admin_email")
+}
+
+/// Analyses de site et générations IA (quota quotidien, suivi).
+model AiRun {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String
+  url       String?
+  ok        Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("ai_run")
 }

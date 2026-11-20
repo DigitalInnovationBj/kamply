@@ -3,12 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { IconCheck, IconShield, IconShieldOff, IconX } from "@tabler/icons-react";
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { ConfirmDialog } from "@/components/app/ConfirmDialog";
 import { TxStatusBadge } from "@/components/app/StatusBadge";
 import { UserAvatar } from "@/components/app/UserAvatar";
-import { processTopup, setUserRole } from "@/app/actions/admin";
-import { formatDate, formatNumber } from "@/lib/campaigns";
+import { processTopup } from "@/app/actions/admin";
+import { formatDate } from "@/lib/campaigns";
 import { formatEuros } from "@/lib/plans";
 
 type Topup = {
@@ -98,59 +98,3 @@ export function TopupRows({ items }: { items: Topup[] }) {
   );
 }
 
-type U = { id: string; name: string; email: string; image: string | null; role: string | null; companyName: string | null; emailVerified: boolean; createdAt: string; balance: number; campaigns: number };
-
-export function UserRows({ items, meId }: { items: U[]; meId: string }) {
-  const router = useRouter();
-  return (
-    <ul className="grid gap-px overflow-hidden rounded-[24px] bg-border">
-      {items.map((u) => {
-        const admin = u.role === "admin";
-        return (
-          <li key={u.id} className="flex flex-wrap items-center gap-3 bg-card px-4 py-3.5 sm:flex-nowrap sm:px-5">
-            <UserAvatar name={u.name} image={u.image} size={40} />
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 truncate text-[15px] font-bold">
-                {u.name}
-                {admin && <span className="rounded-full bg-black px-2 py-0.5 text-[11px] font-bold text-primary">Admin</span>}
-                {!u.emailVerified && <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-bold text-muted-foreground">Non vérifié</span>}
-              </div>
-              <div className="truncate text-[12.5px] text-muted-foreground">
-                {u.email}
-                {u.companyName ? ` · ${u.companyName}` : ""}
-              </div>
-            </div>
-            <div className="grid text-right text-[12.5px] text-muted-foreground">
-              <span className="font-bold tabular-nums text-foreground">{formatEuros(u.balance, { decimals: true })}</span>
-              <span>
-                {formatNumber(u.campaigns)} campagne{u.campaigns > 1 ? "s" : ""} · depuis {formatDate(u.createdAt, { month: "short", year: "numeric" })}
-              </span>
-            </div>
-            {u.id !== meId && (
-              <ConfirmDialog
-                tone={admin ? "danger" : "primary"}
-                title={admin ? "Retirer le rôle administrateur ?" : "Nommer administrateur ?"}
-                description={admin ? `${u.name} n'aura plus accès à l'administration.` : `${u.name} pourra valider les campagnes, saisir les résultats et créditer les recharges.`}
-                confirmLabel={admin ? "Retirer" : "Nommer administrateur"}
-                onConfirm={async () => {
-                  const r = await setUserRole(u.id, admin ? "user" : "admin");
-                  if (!r.ok) {
-                    toast.error(r.error);
-                    return false;
-                  }
-                  toast.success("Rôle mis à jour.");
-                  router.refresh();
-                }}
-                trigger={
-                  <button type="button" className="grid size-10 place-items-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={admin ? `Retirer le rôle admin de ${u.name}` : `Nommer ${u.name} administrateur`}>
-                    {admin ? <IconShieldOff size={18} /> : <IconShield size={18} />}
-                  </button>
-                }
-              />
-            )}
-          </li>
-        );
-      })}
-    </ul>
-  );
-}

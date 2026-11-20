@@ -98,7 +98,11 @@ export const auth = betterAuth({
         void sendEmail({ to: email, subject: otpSubject(type), react: OtpEmail({ otp, kind: type }), devLog: `code ${otp} (${type})` });
       },
     }),
-    admin({ defaultRole: "user", adminRoles: ["admin"] }),
+    admin({
+      defaultRole: "user",
+      adminRoles: ["admin"],
+      bannedUserMessage: "Votre compte est suspendu. Consultez l'e-mail que nous vous avons envoyé ou contactez-nous.",
+    }),
     nextCookies(),
   ],
 });

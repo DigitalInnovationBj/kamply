@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 const font = "'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif";
 
 /** Gabarit commun des e-mails KAMPLY : fond clair, carte blanche, logo texte. */
-export function EmailLayout({ preview, children }: { preview: string; children: ReactNode }) {
+export function EmailLayout({ preview, children, footer }: { preview: string; children: ReactNode; footer?: ReactNode }) {
   return (
     <Html lang="fr">
       <Head />
@@ -17,7 +17,7 @@ export function EmailLayout({ preview, children }: { preview: string; children: 
           <Section style={{ marginTop: 28 }}>{children}</Section>
           <Hr style={{ borderColor: "#ebebe7", margin: "32px 0 20px" }} />
           <Text style={{ margin: 0, fontSize: 12, lineHeight: "18px", color: "#8a8a84" }}>
-            Vous recevez cet e-mail car une action a été effectuée sur votre compte KAMPLY. Si ce n&apos;est pas vous, ignorez simplement ce message.
+            {footer ?? "Vous recevez cet e-mail car une action a été effectuée sur votre compte KAMPLY. Si ce n'est pas vous, ignorez simplement ce message."}
           </Text>
         </Container>
       </Body>
@@ -28,4 +28,15 @@ export function EmailLayout({ preview, children }: { preview: string; children: 
 export const emailStyles = {
   h1: { margin: "0 0 12px", fontSize: 26, lineHeight: "30px", fontWeight: 900, letterSpacing: "-0.03em" },
   p: { margin: "0 0 16px", fontSize: 15, lineHeight: "24px", color: "#3a3a37" },
+} as const;
+
+export const emailButton = {
+  display: "inline-block",
+  background: "#ff5b23",
+  color: "#000",
+  fontWeight: 800,
+  fontSize: 15,
+  padding: "14px 26px",
+  borderRadius: 999,
+  textDecoration: "none",
 } as const;

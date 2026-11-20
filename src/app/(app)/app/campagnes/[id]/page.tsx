@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { IconAlertTriangle, IconArrowLeft, IconClick, IconCoins, IconEye, IconInfoCircle, IconTargetArrow } from "@tabler/icons-react";
+import { IconAlertTriangle, IconArrowLeft, IconChartBar, IconClick, IconCoins, IconEye, IconInfoCircle, IconTargetArrow } from "@tabler/icons-react";
 import { requireUser } from "@/lib/session";
 import { getCampaign } from "@/lib/server/queries";
 import { db } from "@/lib/db";
@@ -41,6 +41,11 @@ export default async function CampaignPage({ params }: PageProps<"/app/campagnes
           <p className="mt-2 text-[15px] text-muted-foreground">{STATUS[c.status].hint}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {user.role === "admin" && (
+            <Link href={`/app/admin/campagnes/${c.id}`} className="inline-flex h-12 items-center gap-2 rounded-full bg-card px-5 text-[15px] font-bold text-foreground no-underline shadow-[inset_0_0_0_1.5px_var(--border)] hover:bg-black hover:text-[#f5f5f3]">
+              <IconChartBar size={18} /> Saisir les statistiques
+            </Link>
+          )}
           <CampaignActions id={c.id} name={c.name} status={c.status} price={c.monthlyPrice} balance={wallet?.balance ?? 0} />
         </div>
       </div>

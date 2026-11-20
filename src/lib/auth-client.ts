@@ -30,6 +30,8 @@ export function authErrorMessage(code?: string, fallback?: string) {
       return "Le mot de passe doit contenir au moins 8 caractères.";
     case "INVALID_PASSWORD":
       return "Mot de passe actuel incorrect.";
+    case "BANNED_USER":
+      return "Votre compte est suspendu. Consultez l'e-mail que nous vous avons envoyé ou contactez-nous.";
     case "USER_NOT_FOUND":
       return "Aucun compte avec cette adresse.";
     default:

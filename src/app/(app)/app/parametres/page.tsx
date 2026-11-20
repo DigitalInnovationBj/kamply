@@ -4,6 +4,7 @@ import { IconAlertTriangle, IconDevices, IconLock, IconUserCircle } from "@table
 import { requireUser } from "@/lib/session";
 import { PageHeader } from "@/components/app/PageHeader";
 import { ProfileForm } from "@/components/app/ProfileForm";
+import { SignOutButton } from "@/components/app/SignOut";
 import { ChangePassword, DeleteAccount, Sessions } from "@/components/app/settings/Security";
 
 export const metadata: Metadata = { title: "Paramètres" };
@@ -28,7 +29,12 @@ export default async function SettingsPage() {
   const { user } = session;
   return (
     <>
-      <PageHeader eyebrow="Paramètres" title="Votre compte" description={user.email} />
+      <PageHeader
+        eyebrow="Paramètres"
+        title="Votre compte"
+        description={user.email}
+        actions={<SignOutButton name={user.name} className="inline-flex h-12 items-center gap-2 self-start rounded-full bg-card px-5 text-[15px] font-bold shadow-[inset_0_0_0_1.5px_var(--border)] transition-colors hover:bg-black hover:text-[#f5f5f3]" />}
+      />
       <div className="grid gap-4">
         <Card icon={<IconUserCircle size={22} />} title="Profil" text="Ces informations servent à préparer vos annonces.">
           <ProfileForm mode="settings" initial={user} />

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/session";
 import { ProfileForm } from "@/components/app/ProfileForm";
 import { PageLoader } from "@/components/app/PageLoader";
-import { SignOutButton } from "@/components/app/SignOutButton";
+import { SignOutButton } from "@/components/app/SignOut";
 
 export const metadata: Metadata = { title: "Bienvenue" };
 
@@ -16,7 +16,7 @@ async function Onboarding() {
     <div className="mx-auto flex min-h-svh w-full max-w-[640px] flex-col px-5 pb-10 pt-5 sm:px-8">
       <header className="flex items-center justify-between">
         <span className="font-display text-[30px] leading-none">KAMPLY</span>
-        <SignOutButton variant="ghost" />
+        <SignOutButton name={user.name} />
       </header>
       <main className="flex-1 py-10">
         <div className="rise mb-8">

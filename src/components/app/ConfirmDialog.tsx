@@ -15,7 +15,10 @@ import {
 import { cn } from "@/lib/utils";
 
 type Props = {
-  trigger: ReactNode;
+  trigger?: ReactNode;
+  /** Mode contrôlé (ouverture depuis un menu, par exemple). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   title: string;
   description: ReactNode;
   confirmLabel: string;
@@ -30,8 +33,13 @@ type Props = {
 };
 
 /** Fenêtre de confirmation avant toute décision importante. */
-export function ConfirmDialog({ trigger, title, description, confirmLabel, tone = "primary", requireText, children, onConfirm, disabled }: Props) {
-  const [open, setOpen] = useState(false);
+export function ConfirmDialog({ trigger, open: openProp, onOpenChange, title, description, confirmLabel, tone = "primary", requireText, children, onConfirm, disabled }: Props) {
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = (o: boolean) => {
+    setOpenState(o);
+    onOpenChange?.(o);
+  };
   const [busy, setBusy] = useState(false);
   const [typed, setTyped] = useState("");
   const blocked = (requireText ? typed.trim().toUpperCase() !== requireText.toUpperCase() : false) || disabled;
@@ -58,7 +66,7 @@ export function ConfirmDialog({ trigger, title, description, confirmLabel, tone 
         }
       }}
     >
-      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+      {trigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
       <AlertDialogContent className="app-surface !min-h-0 rounded-3xl border-0 p-6 sm:max-w-[440px] sm:p-7">
         <AlertDialogHeader className="items-start text-left">
           <span className={cn("mb-2 grid size-12 place-items-center rounded-2xl", tone === "danger" ? "bg-destructive/12 text-destructive" : "bg-black text-primary")} aria-hidden="true">

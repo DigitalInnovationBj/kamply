@@ -7,7 +7,7 @@ import { getSession } from "@/lib/session";
 import { destroyAsset, isOwnAsset, signUpload, type UploadKind } from "@/lib/server/cloudinary";
 import { SECTORS } from "@/lib/sectors";
 
-export type ActionResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string; fields?: Record<string, string> };
+export type ActionResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string; fields?: Record<string, string>; code?: string };
 
 async function currentUser() {
   const session = await getSession();

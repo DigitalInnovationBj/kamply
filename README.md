@@ -8,6 +8,7 @@ Plateforme self-service de campagnes Google Ads et Meta Ads : site vitrine + app
 - Better Auth (e-mail + mot de passe, code OTP à 6 chiffres, rôles admin)
 - Prisma 7 + Neon PostgreSQL (adaptateur `@prisma/adapter-pg`)
 - Resend + React Email (e-mails système), Cloudinary (avatars et visuels, envoi signé direct)
+- Google Gen AI SDK (`@google/genai`, Gemini) : rédaction des campagnes à partir du site du client
 - Recharts (graphiques), GSAP + Lenis (site), Tabler Icons
 - Polices : Robinco (logo et titres, ligatures actives) et Satoshi (textes)
 
@@ -27,7 +28,7 @@ Variables d'environnement : voir `.env.example`.
 - `/inscription` → `/verification` (code OTP par e-mail) → `/bienvenue` (profil : photo ou initiales, entreprise, secteur, site, téléphone) → `/app`
 - `/connexion`, `/mot-de-passe-oublie` (code OTP puis nouveau mot de passe)
 - `/app` : tableau de bord, `/app/campagnes` (+ `nouvelle`, `[id]`), `/app/portefeuille`, `/app/parametres`
-- `/app/admin` : validation des campagnes, saisie des statistiques quotidiennes, crédit des recharges, rôles
+- `/app/admin` : validation des campagnes, saisie et correction des statistiques quotidiennes, crédit des recharges, rôles, suspension de comptes (avec e-mail), envoi d'e-mails personnalisés (`/app/admin/emails`)
 
 ## Fonctionnement provisoire
 
@@ -35,6 +36,10 @@ Variables d'environnement : voir `.env.example`.
 - **Portefeuille** : recharge par virement avec référence `KMP-…`, créditée par un administrateur. Le lancement d'une campagne débite le premier mois ; sans solde suffisant, elle reste en brouillon. Un refus d'annonce rembourse automatiquement.
 - **Premier administrateur** : tout compte créé avec une adresse listée dans `ADMIN_EMAILS` reçoit le rôle admin.
 - **E-mails** : sans domaine vérifié sur Resend, l'expéditeur est `onboarding@resend.dev` et seuls les envois vers l'adresse du compte Resend aboutissent.
+
+## Génération automatique
+
+Première étape de « Nouvelle campagne » : KAMPLY lit le site du client (page d'accueil + 2 pages utiles, adresses internes refusées), puis Gemini propose canal, objectif, zone, titres, descriptions, mots-clés, centres d'intérêt, et les images du site sont proposées comme visuels. L'étape n'apparaît que si `GEMINI_API_KEY` est défini. Quotas : 10 analyses et 60 nouvelles propositions par compte et par jour. `AI_MOCK=1` (local uniquement, sans clé) renvoie des réponses factices pour tester l'interface.
 
 ## Structure
 

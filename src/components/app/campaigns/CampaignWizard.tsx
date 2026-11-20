@@ -15,6 +15,9 @@ import {
   IconLoader2,
   IconMapPin,
   IconPhotoUp,
+  IconPlus,
+  IconRefresh,
+  IconSparkles,
   IconSpeakerphone,
   IconTrash,
   IconUsers,
@@ -24,6 +27,9 @@ import { Field } from "@/components/app/form/Field";
 import { SubmitButton, pulseState, type SubmitState } from "@/components/app/form/SubmitButton";
 import { ConfirmDialog } from "@/components/app/ConfirmDialog";
 import { AdPreview } from "./AdPreview";
+import { SiteStep } from "./SiteStep";
+import { Suggestions } from "./Suggestions";
+import { importSiteImage, regenerate, type Analysis } from "@/app/actions/ai";
 import { uploadToCloudinary, type UploadedImage } from "@/components/app/AvatarUploader";
 import { createCampaign } from "@/app/actions/campaigns";
 import { OBJECTIVES, type ChannelKey } from "@/lib/campaigns";
@@ -32,10 +38,20 @@ import { cn } from "@/lib/utils";
 
 const STEPS = ["Canal", "Objectif", "Zone", "Annonce", "Formule", "Récapitulatif"] as const;
 
-type Props = { company: string; website?: string | null; balance: number };
+type Props = { company: string; website?: string | null; balance: number; aiEnabled: boolean };
 
-export function CampaignWizard({ company, website, balance }: Props) {
+type Pool = { GOOGLE: { headline: string[]; description: string[] }; META: { headline: string[]; description: string[] }; keywords: string[]; interests: string[] };
+
+export function CampaignWizard({ company, website, balance, aiEnabled }: Props) {
   const router = useRouter();
+  const O = aiEnabled ? 1 : 0;
+  const steps: readonly string[] = aiEnabled ? ["Votre site", ...STEPS] : STEPS;
+  const [analysis, setAnalysis] = useState<Analysis | null>(null);
+  const [pool, setPool] = useState<Pool | null>(null);
+  const [more, setMore] = useState<string | null>(null);
+  const [importing, setImporting] = useState<string | null>(null);
+  const [broken, setBroken] = useState<string[]>([]);
+  const siteImages = (analysis?.images ?? []).filter((src) => !broken.includes(src));
   const [step, setStep] = useState(0);
   const [channel, setChannel] = useState<ChannelKey | null>(null);
   const [objective, setObjective] = useState("");
@@ -58,22 +74,84 @@ export function CampaignWizard({ company, website, balance }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
 
+  const applyDraft = (a: Analysis) => {
+    const d = a.draft;
+    const ch = d.channel.recommended;
+    setAnalysis(a);
+    setPool({
+      GOOGLE: { headline: d.google.headlines, description: d.google.descriptions },
+      META: { headline: d.meta.headlines, description: d.meta.texts },
+      keywords: d.google.keywords,
+      interests: [d.meta.interests],
+    });
+    setChannel(ch);
+    setObjective(d.objectives[ch]);
+    setName(d.campaignName);
+    setNational(d.location.national);
+    setLocation(d.location.city || d.business.city);
+    setRadius(Math.min(100, Math.max(5, Math.round(d.location.radiusKm / 5) * 5)));
+    setKeywords(d.google.keywords.slice(0, 12));
+    setAudience(d.meta.interests);
+    setHeadline(ch === "GOOGLE" ? d.google.headlines[0] : d.meta.headlines[0]);
+    setDescription(ch === "GOOGLE" ? d.google.descriptions[0] : d.meta.texts[0]);
+    if (!landingUrl && a.host) setLandingUrl(a.host);
+    setErrors({});
+    setStep(1);
+    topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  /** En changeant de canal, les textes proposés suivent (sauf s'ils ont été modifiés à la main). */
+  const switchChannel = (ch: ChannelKey) => {
+    if (analysis && pool && channel && ch !== channel) {
+      const prev = pool[channel];
+      if (!headline || prev.headline.includes(headline)) setHeadline(pool[ch].headline[0]);
+      if (!description || prev.description.includes(description)) setDescription(pool[ch].description[0]);
+    }
+    setChannel(ch);
+    setObjective(analysis ? analysis.draft.objectives[ch] : "");
+  };
+
+  const askMore = async (field: "headline" | "description" | "keywords" | "interests") => {
+    if (!analysis || !pool || !channel) return;
+    setMore(field);
+    const avoid = field === "keywords" ? [...pool.keywords, ...keywords] : field === "interests" ? pool.interests : pool[channel][field];
+    const r = await regenerate({ context: analysis.context, field, channel, avoid });
+    setMore(null);
+    if (!r.ok) return void toast.error(r.error);
+    const items = r.data ?? [];
+    setPool((p) => {
+      if (!p) return p;
+      if (field === "keywords") return { ...p, keywords: [...new Set([...p.keywords, ...items])] };
+      if (field === "interests") return { ...p, interests: [...new Set([...items, ...p.interests])] };
+      return { ...p, [channel]: { ...p[channel], [field]: [...new Set([...items, ...p[channel][field]])] } };
+    });
+  };
+
+  const pickSiteImage = async (src: string) => {
+    setImporting(src);
+    clear("image");
+    const r = await importSiteImage(src);
+    setImporting(null);
+    if (!r.ok) return setErrors((e) => ({ ...e, image: r.error }));
+    setImage(r.data!);
+  };
+
   const price = PLANS.find((p) => p.id === plan)!.price;
   const canPay = balance >= price;
   const clear = (k: string) => setErrors((e) => ({ ...e, [k]: undefined }));
 
   const validate = (s: number) => {
     const e: Record<string, string> = {};
-    if (s === 0 && !channel) e.channel = "Choisissez Google Ads ou Meta Ads.";
-    if (s === 1) {
+    if (s === 0 + O && !channel) e.channel = "Choisissez Google Ads ou Meta Ads.";
+    if (s === 1 + O) {
       if (!objective) e.objective = "Choisissez un objectif.";
       if (name.trim().length < 3) e.name = "Donnez un nom à votre campagne (3 caractères minimum).";
     }
-    if (s === 2) {
+    if (s === 2 + O) {
       if (!national && location.trim().length < 2) e.location = "Indiquez une ville ou une région.";
       if (channel === "GOOGLE" && keywords.length < 3) e.keywords = "Ajoutez au moins 3 mots-clés.";
     }
-    if (s === 3) {
+    if (s === 3 + O) {
       if (headline.trim().length < 10) e.headline = "Le titre doit faire au moins 10 caractères.";
       if (description.trim().length < 20) e.description = "La description doit faire au moins 20 caractères.";
       if (!/^(https?:\/\/)?[^\s.]+\.[^\s]{2,}$/i.test(landingUrl.trim())) e.landingUrl = "Adresse invalide (ex. monsite.com/offre).";
@@ -162,12 +240,12 @@ export function CampaignWizard({ company, website, balance }: Props) {
       <div className="rise mb-6">
         <div className="flex items-center justify-between text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
           <span>
-            Étape {step + 1} sur {STEPS.length} · <span className="text-foreground">{STEPS[step]}</span>
+            Étape {step + 1} sur {steps.length} · <span className="text-foreground">{steps[step]}</span>
           </span>
-          <span className="tabular-nums">{Math.round(((step + 1) / STEPS.length) * 100)} %</span>
+          <span className="tabular-nums">{Math.round(((step + 1) / steps.length) * 100)} %</span>
         </div>
-        <ol className="mt-3 grid grid-cols-6 gap-1.5" aria-label="Étapes">
-          {STEPS.map((s, i) => (
+        <ol className="mt-3 grid gap-1.5" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }} aria-label="Étapes">
+          {steps.map((s, i) => (
             <li key={s}>
               <button
                 type="button"
@@ -184,9 +262,11 @@ export function CampaignWizard({ company, website, balance }: Props) {
         </ol>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className={cn("grid gap-6", !(aiEnabled && step === 0) && "lg:grid-cols-[minmax(0,1fr)_340px]")}>
         <div key={step} className="rise min-w-0 rounded-[24px] bg-card p-5 sm:p-7">
-          {step === 0 && (
+          {aiEnabled && step === 0 && <SiteStep website={landingUrl || website} onDone={applyDraft} onSkip={() => go(1)} />}
+
+          {step === 0 + O && (
             <Step title="Où voulez-vous être vu ?" text="Une campagne vit sur un seul canal. Vous pourrez en lancer une autre ensuite.">
               <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Canal">
                 {(
@@ -199,8 +279,7 @@ export function CampaignWizard({ company, website, balance }: Props) {
                     key={c.id}
                     selected={channel === c.id}
                     onClick={() => {
-                      setChannel(c.id);
-                      setObjective("");
+                      switchChannel(c.id);
                       clear("channel");
                     }}
                   >
@@ -213,14 +292,20 @@ export function CampaignWizard({ company, website, balance }: Props) {
                     </span>
                     <span className="mt-4 block font-display text-[34px] uppercase leading-[0.85]">{c.title}</span>
                     <span className={cn("mt-2 block text-sm leading-relaxed", channel === c.id ? "text-[#a3a3a0]" : "text-muted-foreground")}>{c.text}</span>
+                    {analysis?.draft.channel.recommended === c.id && (
+                      <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-[#18cccd] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.1em] text-black">
+                        <IconSparkles size={12} /> Conseillé pour vous
+                      </span>
+                    )}
                   </Choice>
                 ))}
               </div>
               <Err msg={errors.channel} />
+              {analysis && <p className="mt-4 rounded-2xl bg-muted px-4 py-3 text-sm leading-relaxed">{analysis.draft.channel.reason}</p>}
             </Step>
           )}
 
-          {step === 1 && channel && (
+          {step === 1 + O && channel && (
             <Step title="Quel est votre objectif ?" text="Il oriente le ciblage et la façon dont les résultats sont mesurés.">
               <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Objectif">
                 {OBJECTIVES[channel].map((o) => (
@@ -264,7 +349,7 @@ export function CampaignWizard({ company, website, balance }: Props) {
             </Step>
           )}
 
-          {step === 2 && (
+          {step === 2 + O && (
             <Step title="Qui doit voir votre annonce ?" text="Plus la zone est précise, plus le budget est efficace.">
               <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl bg-muted px-4 py-3.5">
                 <span>
@@ -339,6 +424,32 @@ export function CampaignWizard({ company, website, balance }: Props) {
                     />
                   </div>
                   {errors.keywords ? <Err msg={errors.keywords} /> : <p className="kf-msg">Validez chaque mot-clé avec Entrée. {keywords.length}/30.</p>}
+                  {pool && (
+                    <div className="mt-2 grid gap-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="ai-tag">
+                          <IconSparkles size={12} /> Suggestions à ajouter
+                        </span>
+                        <button type="button" onClick={() => askMore("keywords")} disabled={more === "keywords"} className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[13px] font-bold text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50">
+                          {more === "keywords" ? <IconLoader2 size={14} className="animate-spin" /> : <IconRefresh size={14} />} Autres mots-clés
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {pool.keywords
+                          .filter((k) => !keywords.includes(k))
+                          .map((k) => (
+                            <button
+                              key={k}
+                              type="button"
+                              onClick={() => keywords.length < 30 && (setKeywords((all) => [...all, k]), clear("keywords"))}
+                              className="inline-flex h-8 items-center gap-1 rounded-full bg-muted px-3 text-[13px] font-bold hover:bg-[#dcdcd6]"
+                            >
+                              <IconPlus size={13} stroke={2.6} /> {k}
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <Field
@@ -351,12 +462,27 @@ export function CampaignWizard({ company, website, balance }: Props) {
                   hint="Facultatif : sans précision, l'IA de Meta trouve elle-même votre public."
                 />
               )}
+              {channel === "META" && pool && (
+                <div className="mt-3">
+                  <Suggestions items={pool.interests} current={audience} onPick={setAudience} onMore={() => askMore("interests")} loading={more === "interests"} />
+                </div>
+              )}
             </Step>
           )}
 
-          {step === 3 && (
+          {step === 3 + O && (
             <Step title="Rédigez votre annonce" text="Un titre court et un bénéfice clair. L'aperçu se met à jour pendant la saisie.">
               <div className="grid gap-5">
+                {pool && channel && (
+                  <Suggestions
+                    items={pool[channel].headline}
+                    current={headline}
+                    onPick={(v) => (setHeadline(v), clear("headline"))}
+                    onMore={() => askMore("headline")}
+                    loading={more === "headline"}
+                    label="Titres proposés"
+                  />
+                )}
                 <Counted label="Titre" value={headline} max={60} error={errors.headline}>
                   <input
                     className="kf-input pl-4"
@@ -369,6 +495,16 @@ export function CampaignWizard({ company, website, balance }: Props) {
                     }}
                   />
                 </Counted>
+                {pool && channel && (
+                  <Suggestions
+                    items={pool[channel].description}
+                    current={description}
+                    onPick={(v) => (setDescription(v), clear("description"))}
+                    onMore={() => askMore("description")}
+                    loading={more === "description"}
+                    label={channel === "META" ? "Textes proposés" : "Descriptions proposées"}
+                  />
+                )}
                 <Counted label="Description" value={description} max={160} error={errors.description} multiline>
                   <textarea
                     className="kf-input min-h-[104px] resize-none py-3.5 pl-4 leading-relaxed"
@@ -437,6 +573,33 @@ export function CampaignWizard({ company, website, balance }: Props) {
                       )}
                     </button>
                   )}
+                  {siteImages.length > 0 && !image && (
+                    <div className="grid gap-2">
+                      <span className="ai-tag w-fit">
+                        <IconSparkles size={12} /> Images trouvées sur votre site
+                      </span>
+                      <div className="-mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1">
+                        {siteImages.map((src) => (
+                          <button
+                            key={src}
+                            type="button"
+                            onClick={() => void pickSiteImage(src)}
+                            disabled={!!importing}
+                            className="group relative size-24 flex-none snap-start overflow-hidden rounded-2xl bg-muted disabled:opacity-60"
+                            aria-label="Utiliser cette image"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element -- image du site du client */}
+                            <img src={src} alt="" referrerPolicy="no-referrer" className="size-full object-cover transition-transform duration-500 group-hover:scale-105" onError={() => setBroken((b) => [...b, src])} />
+                            {importing === src && (
+                              <span className="absolute inset-0 grid place-items-center bg-black/60 text-white">
+                                <IconLoader2 className="animate-spin" />
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <input ref={fileRef} type="file" accept="image/*" className="sr-only" tabIndex={-1} onChange={(e) => void pickImage(e.target.files?.[0])} />
                   <Err msg={errors.image} />
                 </div>
@@ -444,7 +607,7 @@ export function CampaignWizard({ company, website, balance }: Props) {
             </Step>
           )}
 
-          {step === 4 && channel && (
+          {step === 4 + O && channel && (
             <Step title="Choisissez votre formule" text="Prix mensuel tout compris : budget publicitaire, création et optimisation.">
               <div className="grid gap-2.5" role="radiogroup" aria-label="Formule">
                 {PLANS.map((p) => (
@@ -479,18 +642,18 @@ export function CampaignWizard({ company, website, balance }: Props) {
             </Step>
           )}
 
-          {step === 5 && channel && (
+          {step === 5 + O && channel && (
             <Step title="Tout est prêt ?" text="Vérifiez une dernière fois. Notre équipe valide l'annonce avant sa mise en ligne, sous 24 h.">
               <dl className="grid gap-px overflow-hidden rounded-2xl bg-border">
                 {[
-                  ["Canal", channel === "GOOGLE" ? "Google Ads" : "Meta Ads", 0],
-                  ["Objectif", objective, 1],
-                  ["Nom", name, 1],
-                  ["Zone", national ? "Tout le pays" : `${location} · ${radius} km`, 2],
-                  [channel === "GOOGLE" ? "Mots-clés" : "Centres d'intérêt", channel === "GOOGLE" ? keywords.join(", ") : audience || "Ciblage automatique", 2],
-                  ["Titre", headline, 3],
-                  ["Destination", landingUrl, 3],
-                  ["Formule", `${PLANS.find((p) => p.id === plan)!.name} · ${formatEuros(price)} / mois`, 4],
+                  ["Canal", channel === "GOOGLE" ? "Google Ads" : "Meta Ads", 0 + O],
+                  ["Objectif", objective, 1 + O],
+                  ["Nom", name, 1 + O],
+                  ["Zone", national ? "Tout le pays" : `${location} · ${radius} km`, 2 + O],
+                  [channel === "GOOGLE" ? "Mots-clés" : "Centres d'intérêt", channel === "GOOGLE" ? keywords.join(", ") : audience || "Ciblage automatique", 2 + O],
+                  ["Titre", headline, 3 + O],
+                  ["Destination", landingUrl, 3 + O],
+                  ["Formule", `${PLANS.find((p) => p.id === plan)!.name} · ${formatEuros(price)} / mois`, 4 + O],
                 ].map(([k, v, s]) => (
                   <div key={String(k)} className="grid grid-cols-[110px_1fr_auto] items-center gap-3 bg-card px-4 py-3 sm:grid-cols-[140px_1fr_auto]">
                     <dt className="text-[13px] font-semibold text-muted-foreground">{k}</dt>
@@ -505,7 +668,7 @@ export function CampaignWizard({ company, website, balance }: Props) {
           )}
 
           {/* Actions */}
-          <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div data-hidden={aiEnabled && step === 0} className="mt-8 data-[hidden=true]:hidden flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
             {step > 0 ? (
               <button type="button" onClick={() => go(step - 1)} className="inline-flex h-12 items-center justify-center gap-2 rounded-full px-5 text-[15px] font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
                 <IconArrowLeft size={18} stroke={2.4} /> Retour
@@ -513,7 +676,7 @@ export function CampaignWizard({ company, website, balance }: Props) {
             ) : (
               <span />
             )}
-            {step < STEPS.length - 1 ? (
+            {step < steps.length - 1 ? (
               <button
                 type="button"
                 onClick={() => go(step + 1)}
@@ -551,7 +714,7 @@ export function CampaignWizard({ company, website, balance }: Props) {
         </div>
 
         {/* Aperçu */}
-        <aside className="hidden lg:block">
+        <aside className={cn("hidden", !(aiEnabled && step === 0) && "lg:block")}>
           <div className="sticky top-24 grid gap-3">
             <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Aperçu en direct</span>
             {preview}
@@ -560,7 +723,7 @@ export function CampaignWizard({ company, website, balance }: Props) {
       </div>
 
       {/* Aperçu mobile */}
-      {step >= 3 && (
+      {step >= 3 + O && (
         <>
           <button
             type="button"

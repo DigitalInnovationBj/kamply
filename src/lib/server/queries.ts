@@ -100,7 +100,7 @@ export async function getAdminCampaigns(status?: string) {
     where: status ? { status: status as never } : undefined,
     orderBy: [{ updatedAt: "desc" }],
     include: { user: { select: { name: true, email: true, companyName: true, image: true } } },
-    take: 200,
+    take: 500,
   });
 }
 
@@ -129,7 +129,7 @@ export async function getPendingTopups() {
 export async function getAdminUsers() {
   return db.user.findMany({
     orderBy: { createdAt: "desc" },
-    select: { id: true, name: true, email: true, image: true, role: true, companyName: true, emailVerified: true, createdAt: true, wallet: { select: { balance: true } }, _count: { select: { campaigns: true } } },
-    take: 200,
+    select: { id: true, name: true, email: true, image: true, role: true, companyName: true, emailVerified: true, createdAt: true, banned: true, banReason: true, banExpires: true, wallet: { select: { balance: true } }, _count: { select: { campaigns: true } } },
+    take: 500,
   });
 }

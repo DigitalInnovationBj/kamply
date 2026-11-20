@@ -58,6 +58,11 @@ export default async function AdminCampaignPage({ params }: PageProps<"/app/admi
             {c.adminNote && <p className="mt-4 rounded-2xl bg-muted px-4 py-3 text-sm">Dernier message envoyé : « {c.adminNote} »</p>}
           </section>
 
+          {!canStat && (
+            <p className="rise rounded-[24px] bg-card px-5 py-4 text-sm text-muted-foreground">
+              La saisie des résultats s&apos;ouvre dès que la campagne est validée et diffusée.
+            </p>
+          )}
           {canStat && (
             <section className="rise rounded-[24px] bg-card p-5 sm:p-6" aria-label="Saisie des résultats">
               <h2 className="mb-4 flex items-center gap-2 text-lg font-black tracking-[-0.02em]">

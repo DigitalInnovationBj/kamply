@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
 import {
   IconChartDots3,
   IconChevronUp,
@@ -13,6 +14,7 @@ import {
   IconShieldLock,
   IconSpeakerphone,
   IconUsers,
+  IconMail,
   IconCash,
   IconExternalLink,
 } from "@tabler/icons-react";
@@ -33,7 +35,7 @@ import {
 } from "@/components/ui/sidebar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { UserAvatar } from "./UserAvatar";
-import { authClient } from "@/lib/auth-client";
+import { SignOutDialog } from "./SignOut";
 
 export type ShellUser = { name: string; email: string; image?: string | null; role?: string | null; companyName?: string | null };
 
@@ -49,6 +51,7 @@ const ADMIN = [
   { href: "/app/admin/campagnes", label: "Campagnes", icon: IconSpeakerphone },
   { href: "/app/admin/recharges", label: "Recharges", icon: IconCash },
   { href: "/app/admin/utilisateurs", label: "Utilisateurs", icon: IconUsers },
+  { href: "/app/admin/emails", label: "E-mails", icon: IconMail },
 ];
 
 export function isActive(pathname: string, href: string, exact?: boolean) {
@@ -57,15 +60,10 @@ export function isActive(pathname: string, href: string, exact?: boolean) {
 
 export function AppSidebar({ user, badges }: { user: ShellUser; badges?: { pendingCampaigns?: number; pendingTopups?: number } }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { setOpenMobile, isMobile } = useSidebar();
   const close = () => isMobile && setOpenMobile(false);
 
-  const signOut = async () => {
-    await authClient.signOut();
-    router.replace("/connexion");
-    router.refresh();
-  };
+  const [leaving, setLeaving] = useState(false);
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
@@ -183,7 +181,7 @@ export function AppSidebar({ user, badges }: { user: ShellUser; badges?: { pendi
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={signOut} className="h-10 rounded-xl text-destructive focus:text-destructive">
+                <DropdownMenuItem onSelect={() => setTimeout(() => setLeaving(true), 120)} className="h-10 rounded-xl text-destructive focus:text-destructive">
                   <IconLogout size={18} /> Se déconnecter
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -192,6 +190,7 @@ export function AppSidebar({ user, badges }: { user: ShellUser; badges?: { pendi
         </SidebarMenu>
       </SidebarFooter>
       <SidebarRail />
+      <SignOutDialog open={leaving} onOpenChange={setLeaving} name={user.name} />
     </Sidebar>
   );
 }

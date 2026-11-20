@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { IconCalendar, IconCheck, IconClick, IconEye, IconTargetArrow, IconUsers, IconCoins, IconPlayerPause, IconPlayerPlay, IconSquareRoundedX, IconTrash, IconX } from "@tabler/icons-react";
+import { IconCalendar, IconCheck, IconPencil, IconClick, IconEye, IconTargetArrow, IconUsers, IconCoins, IconPlayerPause, IconPlayerPlay, IconSquareRoundedX, IconTrash, IconX } from "@tabler/icons-react";
 import { ConfirmDialog } from "@/components/app/ConfirmDialog";
 import { Field } from "@/components/app/form/Field";
 import { SubmitButton, pulseState, type SubmitState } from "@/components/app/form/SubmitButton";
@@ -84,6 +84,8 @@ export function StatusControl({ id, status }: { id: string; status: CampaignStat
   );
 }
 
+const EDIT_EVENT = "kamply:edit-stat";
+
 const today = () => new Date().toISOString().slice(0, 10);
 
 /** Saisie des résultats d'une journée (création ou correction si la date existe). */
@@ -92,6 +94,26 @@ export function StatForm({ campaignId }: { campaignId: string }) {
   const [v, setV] = useState({ date: today(), impressions: "", reach: "", clicks: "", conversions: "", spendEuros: "" });
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [state, setState] = useState<SubmitState>("idle");
+  const [editing, setEditing] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    const onEdit = (e: Event) => {
+      const d = (e as CustomEvent<Entry>).detail;
+      setV({
+        date: d.date.slice(0, 10),
+        impressions: String(d.impressions),
+        reach: String(d.reach),
+        clicks: String(d.clicks),
+        conversions: String(d.conversions),
+        spendEuros: (d.spend / 100).toFixed(2).replace(".", ","),
+      });
+      setErrors({});
+      setEditing(true);
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
+    window.addEventListener(EDIT_EVENT, onEdit);
+    return () => window.removeEventListener(EDIT_EVENT, onEdit);
+  }, []);
   const set = (k: keyof typeof v) => (e: { target: { value: string } }) => {
     setV((s) => ({ ...s, [k]: e.target.value }));
     setErrors((er) => ({ ...er, [k]: undefined }));
@@ -116,14 +138,30 @@ export function StatForm({ campaignId }: { campaignId: string }) {
     }
     await pulseState(setState, "success", 900);
     setState("idle");
-    toast.success(`Résultats du ${new Date(v.date).toLocaleDateString("fr-FR")} enregistrés.`);
+    toast.success(`Résultats du ${new Date(v.date).toLocaleDateString("fr-FR")} ${editing ? "modifiés" : "enregistrés"}.`);
     setV({ date: v.date, impressions: "", reach: "", clicks: "", conversions: "", spendEuros: "" });
+    setEditing(false);
     router.refresh();
   };
 
   const num = { inputMode: "numeric" as const, placeholder: "0" };
   return (
-    <form onSubmit={submit} noValidate className="grid gap-4">
+    <form ref={formRef} onSubmit={submit} noValidate className="grid scroll-mt-24 gap-4">
+      {editing && (
+        <div className="flex items-center justify-between gap-3 rounded-2xl bg-[#18cccd]/20 px-4 py-3 text-sm font-bold">
+          <span>Modification du {new Date(v.date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: "UTC" })}</span>
+          <button
+            type="button"
+            onClick={() => {
+              setEditing(false);
+              setV({ date: today(), impressions: "", reach: "", clicks: "", conversions: "", spendEuros: "" });
+            }}
+            className="rounded-full px-3 py-1 text-muted-foreground hover:bg-white hover:text-foreground"
+          >
+            Annuler
+          </button>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Field className="col-span-2 sm:col-span-1" label="Date" type="date" max={today()} icon={<IconCalendar size={20} />} value={v.date} onChange={set("date")} error={errors.date} />
         <Field label="Impressions" icon={<IconEye size={20} />} {...num} value={v.impressions} onChange={set("impressions")} error={errors.impressions} />
@@ -134,7 +172,7 @@ export function StatForm({ campaignId }: { campaignId: string }) {
       </div>
       <p className="text-[12.5px] text-muted-foreground">Une date déjà saisie est remplacée par les nouvelles valeurs.</p>
       <SubmitButton state={state} className="sm:mx-0 sm:max-w-[260px]">
-        Enregistrer la journée
+        {editing ? "Enregistrer les modifications" : "Enregistrer la journée"}
       </SubmitButton>
     </form>
   );
@@ -166,7 +204,15 @@ export function StatTable({ entries }: { entries: Entry[] }) {
               <td className="px-5 py-2.5">{formatNumber(e.clicks)}</td>
               <td className="px-5 py-2.5">{formatNumber(e.conversions)}</td>
               <td className="px-5 py-2.5">{formatEuros(e.spend, { decimals: true })}</td>
-              <td className="px-3 py-1.5 text-right">
+              <td className="whitespace-nowrap px-3 py-1.5 text-right">
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new CustomEvent(EDIT_EVENT, { detail: e }))}
+                  className="inline-grid size-9 place-items-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label="Modifier la journée"
+                >
+                  <IconPencil size={16} />
+                </button>
                 <ConfirmDialog
                   tone="danger"
                   title="Supprimer cette journée ?"
@@ -182,7 +228,7 @@ export function StatTable({ entries }: { entries: Entry[] }) {
                     router.refresh();
                   }}
                   trigger={
-                    <button type="button" className="grid size-9 place-items-center rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive" aria-label="Supprimer la journée">
+                    <button type="button" className="inline-grid size-9 place-items-center rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive" aria-label="Supprimer la journée">
                       <IconTrash size={16} />
                     </button>
                   }
