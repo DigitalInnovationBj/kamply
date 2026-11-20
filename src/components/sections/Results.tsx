@@ -1,5 +1,5 @@
-import { Panel } from "@/components/ui/Panel";
-import { Button } from "@/components/ui/Button";
+import { Panel } from "@/components/site/Panel";
+import { Button } from "@/components/site/SiteButton";
 import { FlowerCutout } from "./Steps";
 
 const FIGS = [
@@ -57,7 +57,7 @@ export function Results() {
         <p className="t-lead m-0" style={{ color: "#a3a3a0" }}>
           Pas de « CPM » ni de « CTR ». Votre tableau de bord parle de visites, d&apos;appels et de ventes.
         </p>
-        <Button href="#demarrer" variant="white">
+        <Button href="/inscription" variant="white">
           Voir un tableau de bord
         </Button>
       </div>

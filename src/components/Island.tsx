@@ -11,6 +11,7 @@ const LINKS = [
   { href: "#canaux", label: "Google & Meta" },
   { href: "#tarifs", label: "Tarifs" },
   { href: "#faq", label: "FAQ" },
+  { href: "/connexion", label: "Connexion" },
 ];
 
 /**
@@ -96,7 +97,7 @@ export function Island() {
           </div>
         </div>
 
-        <Link href="#demarrer" className="btn btn--sm" aria-label="Commencer">
+        <Link href="/inscription" className="btn btn--sm" aria-label="Commencer">
           <span className="island-cta-label">
             <span>Commencer</span>
           </span>

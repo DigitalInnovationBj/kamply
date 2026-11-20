@@ -1,0 +1,223 @@
+// KAMPLY : schéma de données
+// Tables d'authentification gérées par Better Auth (user, session, account, verification)
+// et tables métier (campagnes, statistiques, portefeuille).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/* ---------------------------------------------------------------- Auth */
+
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Plugin admin de Better Auth
+  role       String?   @default("user")
+  banned     Boolean?  @default(false)
+  banReason  String?
+  banExpires DateTime?
+
+  // Informations supplémentaires du profil
+  companyName         String?
+  phone               String?
+  website             String?
+  sector              String?
+  imagePublicId       String?
+  onboardingCompleted Boolean @default(false)
+
+  sessions     Session[]
+  accounts     Account[]
+  campaigns    Campaign[]
+  wallet       Wallet?
+  processedTxs WalletTransaction[] @relation("ProcessedBy")
+
+  @@map("user")
+}
+
+model Session {
+  id             String   @id
+  expiresAt      DateTime
+  token          String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ipAddress      String?
+  userAgent      String?
+  userId         String
+  impersonatedBy String?
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+/* ----------------------------------------------------------- Campagnes */
+
+enum Channel {
+  GOOGLE
+  META
+}
+
+enum CampaignStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  PAUSED
+  ENDED
+  REJECTED
+}
+
+enum Plan {
+  STANDARD
+  BASIC
+  ESSENTIAL
+  PREMIUM
+}
+
+model Campaign {
+  id            String         @id @default(cuid())
+  userId        String
+  name          String
+  channel       Channel
+  status        CampaignStatus @default(DRAFT)
+  plan          Plan
+  /// Prix mensuel en centimes d'euro, figé au moment de la création
+  monthlyPrice  Int
+  objective     String
+  location      String
+  radiusKm      Int?
+  audience      String?
+  keywords      String[]       @default([])
+  headline      String
+  description   String
+  landingUrl    String
+  imageUrl      String?
+  imagePublicId String?
+  adminNote     String?
+  startedAt     DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stats CampaignStat[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("campaign")
+}
+
+/// Statistiques quotidiennes saisies par un administrateur
+model CampaignStat {
+  id          String   @id @default(cuid())
+  campaignId  String
+  date        DateTime @db.Date
+  impressions Int      @default(0)
+  reach       Int      @default(0)
+  clicks      Int      @default(0)
+  conversions Int      @default(0)
+  /// Dépense en centimes d'euro
+  spend       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, date])
+  @@map("campaign_stat")
+}
+
+/* --------------------------------------------------------- Portefeuille */
+
+enum TransactionType {
+  TOPUP
+  DEBIT
+  REFUND
+  ADJUSTMENT
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  /// Solde en centimes d'euro
+  balance   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+
+  @@map("wallet")
+}
+
+model WalletTransaction {
+  id            String            @id @default(cuid())
+  walletId      String
+  type          TransactionType
+  status        TransactionStatus @default(PENDING)
+  /// Montant en centimes d'euro, toujours positif
+  amount        Int
+  method        String?
+  reference     String            @unique
+  label         String
+  note          String?
+  campaignId    String?
+  processedById String?
+  processedAt   DateTime?
+  createdAt     DateTime          @default(now())
+
+  wallet      Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  processedBy User?  @relation("ProcessedBy", fields: [processedById], references: [id], onDelete: SetNull)
+
+  @@index([walletId])
+  @@index([status])
+  @@map("wallet_transaction")
+}

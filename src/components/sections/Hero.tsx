@@ -1,7 +1,7 @@
 import { IconBolt } from "@tabler/icons-react";
-import { Panel } from "@/components/ui/Panel";
-import { Button } from "@/components/ui/Button";
-import { MetaAd, PhotoVisual, SearchAd, FLOWERS, PHOTOS } from "@/components/ui/Ads";
+import { Panel } from "@/components/site/Panel";
+import { Button } from "@/components/site/SiteButton";
+import { MetaAd, PhotoVisual, SearchAd, FLOWERS, PHOTOS } from "@/components/site/Ads";
 
 const SECTORS = ["E-commerce", "Fleuristes", "Restaurants", "Salons de beauté", "Cabinets", "Artisans", "Coachs", "Immobilier", "Hôtels", "Agences"];
 
@@ -74,7 +74,7 @@ export function Hero() {
           KAMPLY crée vos campagnes Google Ads ou Meta Ads avec l&apos;IA, les lance pour vous et vous montre les résultats en direct. Sans agence, sans
           expertise.
         </p>
-        <Button href="#demarrer">Créer ma première campagne</Button>
+        <Button href="/inscription">Créer ma première campagne</Button>
       </div>
 
       <div className="marquee -mx-[var(--pad)]" style={{ background: "#18cccd", color: "#000" }} aria-hidden="true">

@@ -1,5 +1,5 @@
 import { IconArrowRight, IconLink } from "@tabler/icons-react";
-import { Panel } from "@/components/ui/Panel";
+import { Panel } from "@/components/site/Panel";
 import { Pricing } from "./Pricing";
 import { Faq } from "./Faq";
 
@@ -59,12 +59,12 @@ export function OnAir() {
         <p className="t-lead mt-7 mb-0" style={{ color: "#a3a3a0" }} data-reveal>
           Collez votre adresse, votre première campagne est prête dans 5 minutes.
         </p>
-        <form className="url-field mt-7" style={{ width: "min(640px, 100%)" }} action="#" data-reveal>
+        <form className="url-field mt-7" style={{ width: "min(640px, 100%)" }} action="/inscription" method="get" data-reveal>
           <IconLink size={22} stroke={2} color="#5c5c58" aria-hidden="true" />
           <label htmlFor="start-url" className="sr-only">
             Adresse de votre site ou de votre page
           </label>
-          <input id="start-url" name="url" type="text" inputMode="url" autoComplete="url" placeholder="votresite.com" />
+          <input id="start-url" name="site" type="text" inputMode="url" autoComplete="url" placeholder="votresite.com" />
           <button type="submit" className="url-go" aria-label="Lancer l'analyse">
             <IconArrowRight size={20} stroke={2.4} />
           </button>
@@ -80,8 +80,9 @@ export function OnAir() {
             ["#comment", "Comment ça marche"],
             ["#tarifs", "Tarifs"],
             ["#faq", "FAQ"],
-            ["#demarrer", "Contact"],
-            ["#demarrer", "Mentions légales"],
+            ["/connexion", "Connexion"],
+            ["/conditions", "Conditions"],
+            ["/confidentialite", "Confidentialité"],
           ].map(([href, label]) => (
             <a key={label} href={href} className="no-underline transition-colors duration-300 hover:text-[#f5f5f3]" style={{ color: "inherit" }}>
               {label}

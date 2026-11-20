@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { Panel } from "@/components/ui/Panel";
-import { MetaAd, PhotoVisual, SearchAd, ShoppingAd, FLOWERS, PHOTOS } from "@/components/ui/Ads";
+import { Panel } from "@/components/site/Panel";
+import { MetaAd, PhotoVisual, SearchAd, ShoppingAd, FLOWERS, PHOTOS } from "@/components/site/Ads";
 import { TypingDemo } from "./TypingDemo";
 import { DragScroll } from "./DragScroll";
 

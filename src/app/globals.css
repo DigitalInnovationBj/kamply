@@ -1,16 +1,97 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 @theme {
   --color-ink: #000000;
   --color-paper: #f5f5f3;
   --color-brand: #ff5b23;
   --color-signal: #18cccd;
-  --color-muted: #a3a3a0;
+  --color-gray: #a3a3a0;
+  --color-signal-ink: #08787a;
+  --color-brand-ink: #bf3d0c;
   --color-line: #2a2a2a;
   --font-display: var(--font-robinco), Impact, "Arial Narrow", sans-serif;
   --font-sans: var(--font-satoshi), system-ui, -apple-system, "Segoe UI", sans-serif;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+
+/* ---------- Jetons shadcn/ui (application, thème « Papier ») ---------- */
+:root {
+  --radius: 1rem;
+  --background: #f5f5f3;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #ff5b23;
+  --primary-foreground: #000000;
+  --secondary: #ebebe7;
+  --secondary-foreground: #0a0a0a;
+  --muted: #ebebe7;
+  --muted-foreground: #5c5c58;
+  --accent: #ebebe7;
+  --accent-foreground: #0a0a0a;
+  --destructive: #d92d20;
+  --border: #dcdcd6;
+  --input: #c4c4be;
+  --ring: #18cccd;
+  --chart-1: #ff5b23;
+  --chart-2: #18cccd;
+  --chart-3: #0a0a0a;
+  --chart-4: #8a8a84;
+  --chart-5: #bf3d0c;
+  --sidebar: #000000;
+  --sidebar-foreground: #f5f5f3;
+  --sidebar-primary: #ff5b23;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #1a1a1a;
+  --sidebar-accent-foreground: #f5f5f3;
+  --sidebar-border: #1f1f1f;
+  --sidebar-ring: #18cccd;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 10px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 @layer components {
@@ -299,7 +380,7 @@ body {
   padding: 0 14px;
   border-radius: 999px;
   font: 600 14.5px/1 var(--font-sans);
-  color: var(--color-muted);
+  color: var(--color-gray);
   text-decoration: none;
   opacity: 0;
   transform: translateY(6px);
@@ -615,7 +696,7 @@ body {
   transition: color 0.6s var(--ease);
 }
 .channel:hover .channel-sub {
-  color: var(--color-muted);
+  color: var(--color-gray);
 }
 .channel-ico {
   width: 64px;

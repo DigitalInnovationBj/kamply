@@ -1,5 +1,5 @@
 import { IconBrandFacebook, IconBrandGoogle, IconBrandInstagram, IconCheck } from "@tabler/icons-react";
-import { Panel } from "@/components/ui/Panel";
+import { Panel } from "@/components/site/Panel";
 
 const GOOGLE = ["Annonces sur la recherche Google", "Google Shopping pour les boutiques en ligne", "Suivi des appels, formulaires et ventes"];
 const META = ["Visuels et textes générés par l'IA", "Catalogue produits et pixel Meta inclus", "Ciblage par intérêts, âge et zone"];
