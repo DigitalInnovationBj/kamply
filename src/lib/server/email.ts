@@ -5,11 +5,8 @@ import type { ReactElement } from "react";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
-/**
- * Expéditeur : sans domaine vérifié sur Resend, seul onboarding@resend.dev est accepté
- * et les e-mails n'arrivent qu'à l'adresse du compte Resend.
- */
-const FROM = process.env.EMAIL_FROM ?? "KAMPLY <onboarding@resend.dev>";
+/** Expéditeur : domaine kamply.site vérifié sur Resend (surchargeable via EMAIL_FROM). */
+const FROM = process.env.EMAIL_FROM ?? "KAMPLY <noreply@kamply.site>";
 const REPLY_TO = process.env.EMAIL_REPLY_TO || SITE.email;
 const devLogOn = () => process.env.NODE_ENV !== "production" || process.env.EMAIL_DEV_LOG === "1";
 

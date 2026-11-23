@@ -35,7 +35,7 @@ Variables d'environnement : voir `.env.example`.
 - **Statistiques** : saisies par un administrateur, jour par jour, depuis la fiche admin d'une campagne.
 - **Portefeuille** : recharge par virement avec référence `KMP-…`, créditée par un administrateur. Le lancement d'une campagne débite le premier mois ; sans solde suffisant, elle reste en brouillon. Un refus d'annonce rembourse automatiquement.
 - **Premier administrateur** : tout compte créé avec une adresse listée dans `ADMIN_EMAILS` reçoit le rôle admin.
-- **E-mails** : sans domaine vérifié sur Resend, l'expéditeur est `onboarding@resend.dev` et seuls les envois vers l'adresse du compte Resend aboutissent.
+- **E-mails** : expéditeur `noreply@kamply.site` (domaine vérifié sur Resend), réponses vers `contact@kamply.site`.
 
 ## Génération automatique
 
