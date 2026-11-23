@@ -17,7 +17,7 @@ export default function PrivacyPage() {
         },
         { h: "Conservation", body: <p>Vos données sont conservées tant que votre compte est actif. La suppression du compte efface vos données et images ; les écritures comptables sont conservées le temps exigé par la loi.</p> },
         { h: "Cookies", body: <p>KAMPLY n&apos;utilise qu&apos;un cookie de session, indispensable à la connexion. Aucun cookie publicitaire n&apos;est déposé.</p> },
-        { h: "Vos droits", body: <p>Vous pouvez accéder à vos données, les corriger depuis les paramètres, ou demander leur effacement. Écrivez-nous à privacy@kamply.com.</p> },
+        { h: "Vos droits", body: <p>Vous pouvez accéder à vos données, les corriger depuis les paramètres, ou demander leur effacement. Écrivez-nous à <a href="mailto:contact@kamply.site">contact@kamply.site</a>.</p> },
       ]}
     />
   );

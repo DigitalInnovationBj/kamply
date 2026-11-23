@@ -1,5 +1,6 @@
 import "server-only";
 import { Resend } from "resend";
+import { SITE } from "@/lib/site";
 import type { ReactElement } from "react";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -9,7 +10,7 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
  * et les e-mails n'arrivent qu'à l'adresse du compte Resend.
  */
 const FROM = process.env.EMAIL_FROM ?? "KAMPLY <onboarding@resend.dev>";
-const REPLY_TO = process.env.EMAIL_REPLY_TO || undefined;
+const REPLY_TO = process.env.EMAIL_REPLY_TO || SITE.email;
 const devLogOn = () => process.env.NODE_ENV !== "production" || process.env.EMAIL_DEV_LOG === "1";
 
 export type SendResult = { ok: true } | { ok: false; error: string };

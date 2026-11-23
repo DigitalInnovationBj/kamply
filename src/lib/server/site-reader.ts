@@ -30,7 +30,7 @@ export class SiteReadError extends Error {
   }
 }
 
-const UA = "Mozilla/5.0 (compatible; KamplyBot/1.0; +https://kamply-platform.vercel.app)";
+const UA = "Mozilla/5.0 (compatible; KamplyBot/1.0; +https://www.kamply.site)";
 const MAX_BYTES = 1_500_000;
 const TIMEOUT = 8000;
 

@@ -17,7 +17,7 @@ export const auth = betterAuth({
   baseURL: appUrl,
   secret: process.env.BETTER_AUTH_SECRET,
   database: prismaAdapter(db, { provider: "postgresql" }),
-  trustedOrigins: [appUrl, SITE.url, ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : [])],
+  trustedOrigins: [appUrl, SITE.url, "https://kamply.site", "https://www.kamply.site", ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : [])],
 
   emailAndPassword: {
     enabled: true,

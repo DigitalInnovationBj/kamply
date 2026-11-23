@@ -49,7 +49,7 @@ export function OnAir() {
         <span className="inline-flex items-center gap-2" style={{ color: "#ff5b23" }}>
           <span className="live-dot" /> Prêt à diffuser
         </span>
-        <span>kamply.com</span>
+        <span>kamply.site</span>
       </div>
 
       <div>
@@ -81,6 +81,7 @@ export function OnAir() {
             ["#tarifs", "Tarifs"],
             ["#faq", "FAQ"],
             ["/connexion", "Connexion"],
+            ["mailto:contact@kamply.site", "Contact"],
             ["/conditions", "Conditions"],
             ["/confidentialite", "Confidentialité"],
           ].map(([href, label]) => (

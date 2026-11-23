@@ -290,7 +290,7 @@ export function EmailComposer({ people, preselected }: { people: Person[]; prese
                 icon={<IconLink size={18} />}
                 inputMode="url"
                 autoCapitalize="none"
-                placeholder="https://kamply.com/app"
+                placeholder="https://www.kamply.site/app"
                 value={ctaUrl}
                 onChange={(e) => {
                   setCtaUrl(e.target.value);

@@ -1,14 +1,16 @@
 /**
  * Informations du site, partagées par les métadonnées, le sitemap, robots.txt et l'image de partage.
- * Domaine provisoire : définir NEXT_PUBLIC_SITE_URL (ex. https://kamply.com) une fois le domaine acheté.
+ * NEXT_PUBLIC_SITE_URL permet de surcharger le domaine (préproduction, par exemple).
  */
 export const SITE = {
   name: "KAMPLY",
-  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://kamply-platform.vercel.app").replace(/\/$/, ""),
+  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.kamply.site").replace(/\/$/, ""),
   title: "KAMPLY | Vos pubs Google & Meta en 5 minutes",
   shortTitle: "Vos pubs Google & Meta en 5 minutes",
   description:
     "KAMPLY crée vos campagnes Google Ads ou Meta Ads avec l'IA, les lance pour vous et vous montre les résultats en direct. Sans agence, sans expertise. Dès 149 € par mois, budget publicitaire inclus.",
+  domain: "kamply.site",
+  email: "contact@kamply.site",
   locale: "fr_FR",
   keywords: [
     "Google Ads",
@@ -23,5 +25,5 @@ export const SITE = {
     "KAMPLY",
   ],
   /** Date de dernière mise à jour du contenu, utilisée par le sitemap. */
-  updatedAt: "2026-11-20",
+  updatedAt: "2026-11-23",
 } as const;

@@ -54,4 +54,4 @@ Première étape de « Nouvelle campagne » : KAMPLY lit le site du client (page
 
 - Photos de l'exemple Maison Lune : Unsplash (licence Unsplash).
 - Robinco © Asenbayu : vérifier la licence commerciale avant la mise en production.
-- Domaine définitif : variable `NEXT_PUBLIC_SITE_URL` (métadonnées, canonique, image de partage, sitemap, robots) ; penser à mettre `BETTER_AUTH_URL` à jour en même temps.
+- Domaine : https://www.kamply.site (défaut de `NEXT_PUBLIC_SITE_URL`), contact : contact@kamply.site.
