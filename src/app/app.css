@@ -553,3 +553,24 @@
   .ai-tag { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; background: rgba(24, 204, 205, .2); color: #08787a; padding: 2px 8px; font-size: 11px; font-weight: 800; letter-spacing: .02em; }
 }
 @keyframes ai-scan { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+
+/* ------------------------------------------------ Retour de paiement */
+@layer components {
+  .pay-mark { width: 132px; height: 132px; }
+  .pay-mark svg { overflow: visible; transform: rotate(-90deg); }
+  .pay-track { fill: none; stroke: var(--border); stroke-width: 6; }
+  .pay-ring { fill: none; stroke: #ff5b23; stroke-width: 6; stroke-linecap: round; stroke-dasharray: 327; stroke-dashoffset: 245; transform-origin: 60px 60px; animation: pay-spin 1.1s linear infinite; transition: stroke .4s, stroke-dashoffset .7s cubic-bezier(.16,1,.3,1); }
+  .pay-check, .pay-cross { fill: none; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; transform: rotate(90deg); transform-origin: 60px 60px; stroke-dasharray: 80; stroke-dashoffset: 80; }
+  .pay-check { stroke: #000; }
+  .pay-cross { stroke: #fff; }
+  .pay[data-state="ok"] .pay-ring { animation: none; stroke: #18cccd; stroke-dashoffset: 0; fill: #18cccd; transition: fill .4s .45s, stroke-dashoffset .7s cubic-bezier(.16,1,.3,1); }
+  .pay[data-state="ok"] .pay-check { animation: pay-draw .5s cubic-bezier(.65,0,.35,1) .7s forwards; }
+  .pay[data-state="ok"] .pay-mark { animation: pay-pop .6s cubic-bezier(.34,1.56,.64,1) .65s both; }
+  .pay[data-state="ko"] .pay-ring { animation: none; stroke: #d92d20; stroke-dashoffset: 0; fill: #d92d20; transition: fill .3s .3s, stroke-dashoffset .5s; }
+  .pay[data-state="ko"] .pay-cross { animation: pay-draw .4s ease-out .5s forwards; }
+  .pay[data-state="ko"] .pay-mark { animation: pay-shake .5s ease .8s both; }
+}
+@keyframes pay-spin { to { transform: rotate(360deg); } }
+@keyframes pay-draw { to { stroke-dashoffset: 0; } }
+@keyframes pay-pop { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes pay-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-10px); } 40% { transform: translateX(9px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(4px); } }

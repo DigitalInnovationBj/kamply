@@ -88,7 +88,7 @@ export async function getCampaign(userId: string, id: string) {
 export async function getAdminOverview() {
   const [pendingCampaigns, pendingTopups, activeCampaigns, users] = await Promise.all([
     db.campaign.count({ where: { status: "PENDING_REVIEW" } }),
-    db.walletTransaction.aggregate({ where: { type: "TOPUP", status: "PENDING" }, _count: true, _sum: { amount: true } }),
+    db.walletTransaction.aggregate({ where: { type: "TOPUP", status: "PENDING", method: "BANK_TRANSFER" }, _count: true, _sum: { amount: true } }),
     db.campaign.count({ where: { status: "ACTIVE" } }),
     db.user.count(),
   ]);

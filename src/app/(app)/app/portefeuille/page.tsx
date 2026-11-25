@@ -6,18 +6,45 @@ import { PageHeader } from "@/components/app/PageHeader";
 import { TopupDialog } from "@/components/app/wallet/TopupDialog";
 import { TransactionList } from "@/components/app/wallet/TransactionList";
 import { formatEuros } from "@/lib/plans";
+import Link from "next/link";
+import { db } from "@/lib/db";
+import { geniusPayFeeConfig, geniusPayReady } from "@/lib/server/geniuspay";
+import { reconcilePendingTopups } from "@/lib/server/topups";
 
 export const metadata: Metadata = { title: "Portefeuille" };
 
-export default async function WalletPage() {
-  const { user } = await requireUser();
+export default async function WalletPage({ searchParams }: PageProps<"/app/portefeuille">) {
+  const [{ user }, sp] = await Promise.all([requireUser(), searchParams]);
+  await reconcilePendingTopups(user.id).catch(() => null);
   const { wallet, transactions, pending } = await getWallet(user.id);
+  const campaignId = typeof sp.campagne === "string" ? sp.campagne : undefined;
+  const campaign = campaignId ? await db.campaign.findFirst({ where: { id: campaignId, userId: user.id, status: "DRAFT" }, select: { id: true, name: true, monthlyPrice: true } }) : null;
+  const missing = campaign ? Math.max(5000, campaign.monthlyPrice - wallet.balance) : 0;
   const spent = transactions.filter((t) => t.type === "DEBIT" && t.status === "COMPLETED").reduce((s, t) => s + t.amount, 0);
   const added = transactions.filter((t) => (t.type === "TOPUP" || t.type === "REFUND") && t.status === "COMPLETED").reduce((s, t) => s + t.amount, 0);
 
   return (
     <>
-      <PageHeader eyebrow="Portefeuille" title="Votre solde" description="Rechargez votre solde par virement : il finance vos campagnes, mois après mois." />
+      <PageHeader eyebrow="Portefeuille" title="Votre solde" description="Rechargez votre solde par carte : il finance vos campagnes, mois après mois." />
+
+      {campaign && (
+        <div className="rise mb-4 flex flex-col gap-3 rounded-2xl bg-primary/12 px-4 py-3.5 text-sm sm:flex-row sm:items-center sm:justify-between">
+          <span>
+            {wallet.balance >= campaign.monthlyPrice ? (
+              <>Votre solde couvre maintenant « {campaign.name} ».</>
+            ) : (
+              <>
+                Il manque <strong>{formatEuros(campaign.monthlyPrice - wallet.balance, { decimals: true })}</strong> pour lancer « {campaign.name} ».
+              </>
+            )}
+          </span>
+          {wallet.balance >= campaign.monthlyPrice && (
+            <Link href={`/app/campagnes/${campaign.id}`} className="inline-flex h-10 items-center justify-center rounded-full bg-black px-4 font-bold text-[#f5f5f3] no-underline hover:bg-primary hover:text-black">
+              Lancer la campagne
+            </Link>
+          )}
+        </div>
+      )}
 
       <div className="rise grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <section className="flex flex-col justify-between gap-8 rounded-[28px] bg-black p-6 text-[#f5f5f3] sm:p-8" aria-label="Solde disponible">
@@ -33,7 +60,13 @@ export default async function WalletPage() {
               </p>
             )}
           </div>
-          <TopupDialog />
+          <TopupDialog
+            cardEnabled={geniusPayReady()}
+            fees={geniusPayFeeConfig()}
+            suggested={campaign && wallet.balance < campaign.monthlyPrice ? Math.ceil(missing / 100) : undefined}
+            campaignId={campaign?.id}
+            defaultOpen={!!campaign && wallet.balance < campaign.monthlyPrice}
+          />
         </section>
 
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-1">

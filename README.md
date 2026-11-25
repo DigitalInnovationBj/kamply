@@ -33,7 +33,7 @@ Variables d'environnement : voir `.env.example`.
 ## Fonctionnement provisoire
 
 - **Statistiques** : saisies par un administrateur, jour par jour, depuis la fiche admin d'une campagne.
-- **Portefeuille** : recharge par virement avec référence `KMP-…`, créditée par un administrateur. Le lancement d'une campagne débite le premier mois ; sans solde suffisant, elle reste en brouillon. Un refus d'annonce rembourse automatiquement.
+- **Portefeuille** : recharge par carte via GeniusPay (encaissement en F CFA à parité fixe, frais de carte ajoutés au montant payé). Le solde est crédité après revérification du paiement (webhook `/api/webhooks/geniuspay`, page de retour, ou affichage du portefeuille). Le virement bancaire est masqué (`BANK_TRANSFER_ENABLED=1` pour le réactiver). Le lancement d'une campagne débite le premier mois ; sans solde suffisant, elle reste en brouillon. Un refus d'annonce rembourse automatiquement.
 - **Premier administrateur** : tout compte créé avec une adresse listée dans `ADMIN_EMAILS` reçoit le rôle admin.
 - **E-mails** : expéditeur `noreply@kamply.site` (domaine vérifié sur Resend), réponses vers `contact@kamply.site`.
 

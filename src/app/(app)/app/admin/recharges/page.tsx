@@ -11,10 +11,10 @@ export default async function AdminTopupsPage() {
   const list = await getPendingTopups();
   return (
     <>
-      <PageHeader eyebrow="Administration" title="Recharges" description="Créditez une recharge dès que le virement portant sa référence est reçu." />
+      <PageHeader eyebrow="Administration" title="Recharges" description="Paiements par carte GeniusPay : le solde est crédité automatiquement après vérification du paiement." />
       <div className="rise">
         <TopupRows
-          items={list.map((t) => ({ id: t.id, amount: t.amount, reference: t.reference, status: t.status, note: t.note, createdAt: t.createdAt.toISOString(), user: t.wallet.user }))}
+          items={list.map((t) => ({ id: t.id, amount: t.amount, reference: t.reference, status: t.status, note: t.note, method: t.method, fee: t.fee, chargedAmount: t.chargedAmount, createdAt: t.createdAt.toISOString(), user: t.wallet.user }))}
         />
       </div>
     </>

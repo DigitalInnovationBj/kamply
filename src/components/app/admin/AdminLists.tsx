@@ -3,12 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { IconCheck, IconX } from "@tabler/icons-react";
+import { IconCheck, IconCreditCard, IconRefresh, IconX } from "@tabler/icons-react";
 import { ConfirmDialog } from "@/components/app/ConfirmDialog";
 import { TxStatusBadge } from "@/components/app/StatusBadge";
 import { UserAvatar } from "@/components/app/UserAvatar";
-import { processTopup } from "@/app/actions/admin";
-import { formatDate } from "@/lib/campaigns";
+import { processTopup, recheckTopup } from "@/app/actions/admin";
+import { formatDate, formatNumber } from "@/lib/campaigns";
 import { formatEuros } from "@/lib/plans";
 
 type Topup = {
@@ -17,11 +17,14 @@ type Topup = {
   reference: string;
   status: "PENDING" | "COMPLETED" | "REJECTED" | "CANCELLED";
   note: string | null;
+  method: string | null;
+  fee: number;
+  chargedAmount: number | null;
   createdAt: string;
   user: { name: string; email: string; companyName: string | null; image: string | null };
 };
 
-/** Recharges : crédit après réception du virement, ou refus motivé. */
+/** Recharges : cartes vérifiées automatiquement ; virements (masqués) crédités à la main. */
 export function TopupRows({ items }: { items: Topup[] }) {
   const router = useRouter();
   const [note, setNote] = useState("");
@@ -46,12 +49,32 @@ export function TopupRows({ items }: { items: Topup[] }) {
           <div className="min-w-0 flex-1">
             <div className="truncate text-[15px] font-bold">{t.user.companyName || t.user.name}</div>
             <div className="truncate text-[12.5px] text-muted-foreground">
-              <span className="font-mono font-bold text-foreground">{t.reference}</span> · {formatDate(t.createdAt, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+              {t.method === "CARD" && <IconCreditCard size={13} className="mr-1 inline align-[-2px]" />}
+              <span className="font-mono font-bold text-foreground">{t.reference}</span>
+              {t.chargedAmount ? ` · ${formatNumber(t.chargedAmount)} F CFA débités` : ""} · {formatDate(t.createdAt, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
             </div>
             {t.note && <div className="text-[12.5px] text-muted-foreground">« {t.note} »</div>}
           </div>
           <div className="text-[18px] font-black tabular-nums tracking-[-0.02em]">{formatEuros(t.amount, { decimals: true })}</div>
-          {t.status === "PENDING" ? (
+          {t.method === "CARD" ? (
+            <div className="flex items-center gap-2">
+              {t.status === "PENDING" && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const r = await recheckTopup(t.id);
+                    if (!r.ok) return void toast.error(r.error);
+                    toast.message(r.data?.status === "PENDING" ? "Paiement toujours en attente chez GeniusPay." : "Statut mis à jour.");
+                    router.refresh();
+                  }}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full bg-muted px-3 text-[13px] font-bold hover:bg-[#dcdcd6]"
+                >
+                  <IconRefresh size={15} /> Vérifier
+                </button>
+              )}
+              <TxStatusBadge status={t.status} />
+            </div>
+          ) : t.status === "PENDING" ? (
             <div className="flex w-full gap-2 sm:w-auto">
               <ConfirmDialog
                 title="Créditer ce virement ?"

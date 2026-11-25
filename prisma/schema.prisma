@@ -209,6 +209,13 @@ model WalletTransaction {
   amount        Int
   method        String?
   reference     String            @unique
+  /// Paiement par carte (GeniusPay) : référence du prestataire
+  providerReference String?       @unique
+  /// Frais de carte répercutés, en centimes d'euro (équivalent)
+  fee           Int               @default(0)
+  /// Montant réellement débité chez le prestataire, dans sa devise (ex. XOF)
+  chargedAmount Int?
+  chargedCurrency String?
   label         String
   note          String?
   campaignId    String?

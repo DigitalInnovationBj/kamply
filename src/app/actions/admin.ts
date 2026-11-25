@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { reconcileTopup } from "@/lib/server/topups";
 import { getSession } from "@/lib/session";
 import type { ActionResult } from "./profile";
 
@@ -94,6 +95,7 @@ export async function processTopup(id: string, decision: "approve" | "reject", n
     const res = await db.$transaction(async (tx) => {
       const t = await tx.walletTransaction.findUnique({ where: { id } });
       if (!t || t.type !== "TOPUP" || t.status !== "PENDING") return { ok: false as const, error: "Cette recharge a déjà été traitée." };
+      if (t.method === "CARD") return { ok: false as const, error: "Les paiements par carte sont crédités automatiquement après vérification." };
       await tx.walletTransaction.update({
         where: { id },
         data: { status: decision === "approve" ? "COMPLETED" : "REJECTED", processedById: by, processedAt: new Date(), note: note?.trim() || null },
@@ -113,5 +115,15 @@ export async function setUserRole(userId: string, role: "user" | "admin"): Promi
     await db.user.update({ where: { id: userId }, data: { role } });
     revalidatePath("/app/admin", "layout");
     return { ok: true };
+  });
+}
+
+/** Revérifie une recharge par carte auprès de GeniusPay. */
+export async function recheckTopup(id: string): Promise<ActionResult<{ status: string }>> {
+  return guard(async () => {
+    await adminId();
+    const status = await reconcileTopup(id);
+    revalidatePath("/app/admin/recharges");
+    return { ok: true, data: { status } };
   });
 }

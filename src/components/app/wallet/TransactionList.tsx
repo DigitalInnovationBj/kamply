@@ -60,7 +60,7 @@ export function TransactionList({ items }: { items: Tx[] }) {
                   <ConfirmDialog
                     tone="danger"
                     title="Annuler cette recharge ?"
-                    description={<>La demande {t.reference} de {formatEuros(t.amount, { decimals: true })} sera annulée. Si vous avez déjà fait le virement, contactez-nous plutôt.</>}
+                    description={<>La demande {t.reference} de {formatEuros(t.amount, { decimals: true })} sera annulée. Si vous venez de payer, patientez : le paiement est vérifié automatiquement.</>}
                     confirmLabel="Annuler la recharge"
                     onConfirm={async () => {
                       const r = await cancelTopup(t.id);

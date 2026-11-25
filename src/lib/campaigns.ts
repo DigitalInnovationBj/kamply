@@ -38,6 +38,7 @@ export const TX_STATUS = {
 } as const;
 
 export const TOPUP_METHODS = {
+  CARD: "Carte bancaire",
   BANK_TRANSFER: "Virement bancaire",
 } as const;
 
