@@ -8,7 +8,7 @@ import { TransactionList } from "@/components/app/wallet/TransactionList";
 import { formatEuros } from "@/lib/plans";
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { geniusPayFeeConfig, geniusPayReady } from "@/lib/server/geniuspay";
+import { geniusPayReady } from "@/lib/server/geniuspay";
 import { reconcilePendingTopups } from "@/lib/server/topups";
 
 export const metadata: Metadata = { title: "Portefeuille" };
@@ -62,7 +62,6 @@ export default async function WalletPage({ searchParams }: PageProps<"/app/porte
           </div>
           <TopupDialog
             cardEnabled={geniusPayReady()}
-            fees={geniusPayFeeConfig()}
             suggested={campaign && wallet.balance < campaign.monthlyPrice ? Math.ceil(missing / 100) : undefined}
             campaignId={campaign?.id}
             defaultOpen={!!campaign && wallet.balance < campaign.monthlyPrice}

@@ -6,16 +6,13 @@ import { IconCreditCard, IconLock, IconPlus } from "@tabler/icons-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SubmitButton, pulseState, type SubmitState } from "@/components/app/form/SubmitButton";
 import { requestCardTopup } from "@/app/actions/wallet";
-import { cardTopupQuote, type CardFeeConfig } from "@/lib/card-fee";
 import { formatEuros } from "@/lib/plans";
-import { formatNumber } from "@/lib/campaigns";
 import { cn } from "@/lib/utils";
 
 const PRESETS = [150, 300, 600, 1200];
 
 type Props = {
   cardEnabled: boolean;
-  fees: CardFeeConfig;
   /** Montant proposé (ex. ce qu'il manque pour lancer une campagne), en euros. */
   suggested?: number;
   campaignId?: string;
@@ -23,7 +20,7 @@ type Props = {
 };
 
 /** Recharge du solde par carte bancaire (GeniusPay). */
-export function TopupDialog({ cardEnabled, fees, suggested, campaignId, defaultOpen }: Props) {
+export function TopupDialog({ cardEnabled, suggested, campaignId, defaultOpen }: Props) {
   const initial = suggested && !PRESETS.includes(suggested) ? String(suggested) : "";
   const [open, setOpen] = useState(!!defaultOpen && cardEnabled);
   const [amount, setAmount] = useState<number>(suggested && PRESETS.includes(suggested) ? suggested : 300);
@@ -32,7 +29,7 @@ export function TopupDialog({ cardEnabled, fees, suggested, campaignId, defaultO
 
   const value = custom ? Number(custom.replace(",", ".")) : amount;
   const invalid = !value || value < 50 || value > 10000;
-  const quote = invalid ? null : cardTopupQuote(Math.round(value * 100), fees);
+  const cents = invalid ? 0 : Math.round(value * 100);
 
   const pay = async () => {
     if (invalid) return void pulseState(setState, "error");
@@ -95,34 +92,21 @@ export function TopupDialog({ cardEnabled, fees, suggested, campaignId, defaultO
               )}
             </label>
 
-            {quote && (
-              <dl className="mt-3 grid gap-2 rounded-2xl bg-card px-4 py-3.5 text-sm">
-                <div className="flex justify-between gap-3">
-                  <dt className="text-muted-foreground">Crédité sur votre solde</dt>
-                  <dd className="m-0 font-bold tabular-nums">{formatEuros(Math.round(value * 100), { decimals: true })}</dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-muted-foreground">Frais de paiement par carte</dt>
-                  <dd className="m-0 font-bold tabular-nums">{formatEuros(quote.feeCents, { decimals: true })}</dd>
-                </div>
-                <div className="flex items-baseline justify-between gap-3 border-t border-border pt-2">
-                  <dt className="font-bold">Total débité</dt>
-                  <dd className="m-0 text-right">
-                    <span className="block text-[18px] font-black tabular-nums tracking-[-0.02em]">{formatEuros(quote.totalCents, { decimals: true })}</span>
-                    <span className="block text-[12px] text-muted-foreground tabular-nums">soit {formatNumber(quote.totalXof)} F CFA</span>
-                  </dd>
-                </div>
-              </dl>
+            {!invalid && (
+              <p className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-card px-4 py-3.5 text-sm">
+                <span className="text-muted-foreground">Crédité sur votre solde, sans frais</span>
+                <strong className="text-[18px] font-black tabular-nums tracking-[-0.02em]">{formatEuros(cents, { decimals: true })}</strong>
+              </p>
             )}
 
             <div className="mt-4">
               <SubmitButton type="button" state={state} onClick={pay} disabled={invalid}>
-                <IconCreditCard size={19} /> {state === "loading" ? "Redirection vers le paiement…" : quote ? `Payer ${formatEuros(quote.totalCents, { decimals: true })}` : "Payer par carte"}
+                <IconCreditCard size={19} /> {state === "loading" ? "Redirection vers le paiement…" : !invalid ? `Payer ${formatEuros(cents, { decimals: true })}` : "Payer par carte"}
               </SubmitButton>
             </div>
             <p className="mt-3 flex items-start justify-center gap-1.5 text-center text-[12px] leading-relaxed text-muted-foreground">
               <IconLock size={13} className="mt-0.5 flex-none" />
-              <span>Visa et Mastercard. Paiement sécurisé par GeniusPay, encaissé en francs CFA (1 € = 655,957 F CFA, parité fixe).</span>
+              <span>Visa et Mastercard. Paiement sécurisé par GeniusPay.</span>
             </p>
           </>
         )}

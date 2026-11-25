@@ -51,7 +51,6 @@ export async function reconcileTopup(id: string): Promise<TopupState> {
         react: TopupEmail({
           name: t.wallet.user.name,
           amount: formatEuros(t.amount, { decimals: true }),
-          fee: t.fee ? formatEuros(t.fee, { decimals: true }) : null,
           balance: formatEuros(credited.balance, { decimals: true }),
           reference: t.reference,
           url: `${appUrl()}/app/portefeuille`,

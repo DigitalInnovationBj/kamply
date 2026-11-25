@@ -5,8 +5,8 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { SITE } from "@/lib/site";
-import { cardTopupQuote } from "@/lib/card-fee";
-import { createCardPayment, geniusPayFeeConfig, geniusPayReady } from "@/lib/server/geniuspay";
+import { centsToXof } from "@/lib/card-fee";
+import { createCardPayment, geniusPayReady } from "@/lib/server/geniuspay";
 import { reconcileTopup, type TopupState } from "@/lib/server/topups";
 import type { ActionResult } from "./profile";
 
@@ -38,7 +38,8 @@ export async function requestCardTopup(input: { amountEuros: number; campaignId?
   const recent = await db.walletTransaction.count({ where: { walletId: wallet.id, type: "TOPUP", status: "PENDING", createdAt: { gte: new Date(Date.now() - 3600_000) } } });
   if (recent >= 5) return { ok: false, error: "Trop de paiements en cours. Patientez quelques minutes ou annulez une recharge en attente." };
 
-  const quote = cardTopupQuote(amount, geniusPayFeeConfig());
+  // Frais de carte absorbés : le montant encaissé correspond exactement au montant crédité.
+  const chargedXof = centsToXof(amount);
   const reference = newReference();
   const tx = await db.walletTransaction.create({
     data: {
@@ -46,8 +47,7 @@ export async function requestCardTopup(input: { amountEuros: number; campaignId?
       type: "TOPUP",
       status: "PENDING",
       amount,
-      fee: quote.feeCents,
-      chargedAmount: quote.totalXof,
+      chargedAmount: chargedXof,
       chargedCurrency: "XOF",
       method: "CARD",
       reference,
@@ -59,7 +59,7 @@ export async function requestCardTopup(input: { amountEuros: number; campaignId?
   const base = `${process.env.BETTER_AUTH_URL ?? SITE.url}/app/portefeuille/retour?recharge=${tx.id}${parsed.data.campaignId ? `&campagne=${parsed.data.campaignId}` : ""}`;
   try {
     const card = await createCardPayment({
-      amountXof: quote.totalXof,
+      amountXof: chargedXof,
       description: `Recharge KAMPLY ${reference}`,
       externalReference: reference,
       customer: { name: user.name, email: user.email },

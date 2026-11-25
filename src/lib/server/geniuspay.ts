@@ -1,27 +1,15 @@
 import "server-only";
 import crypto from "node:crypto";
-import type { CardFeeConfig } from "@/lib/card-fee";
 
 /**
  * Client GeniusPay : paiement par carte bancaire (Visa, Mastercard) des recharges.
  * Variables : GENIUSPAY_API_KEY, GENIUSPAY_API_SECRET, GENIUSPAY_WEBHOOK_SECRET ;
- * facultatives : GENIUSPAY_BASE_URL, GENIUSPAY_FEE_PERCENT (3 % par défaut),
- * GENIUSPAY_FEE_FIXED (100 F CFA par défaut).
+ * facultative : GENIUSPAY_BASE_URL. Les frais de carte sont absorbés par KAMPLY.
  */
 const BASE_URL = process.env.GENIUSPAY_BASE_URL?.replace(/\/$/, "") ?? "https://geniuspay.ci/api/v1/merchant";
 
 export function geniusPayReady() {
   return !!(process.env.GENIUSPAY_API_KEY && process.env.GENIUSPAY_API_SECRET);
-}
-
-/** Grille des frais de carte GeniusPay (pourcentage + fixe par transaction). */
-export function geniusPayFeeConfig(): CardFeeConfig {
-  const percent = Number(process.env.GENIUSPAY_FEE_PERCENT);
-  const fixed = Number(process.env.GENIUSPAY_FEE_FIXED);
-  return {
-    percent: process.env.GENIUSPAY_FEE_PERCENT && Number.isFinite(percent) && percent >= 0 && percent < 50 ? percent : 3,
-    fixed: process.env.GENIUSPAY_FEE_FIXED && Number.isFinite(fixed) && fixed >= 0 ? fixed : 100,
-  };
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {

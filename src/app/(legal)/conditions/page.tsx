@@ -20,7 +20,7 @@ export default function TermsPage() {
             </>
           ),
         },
-        { h: "Portefeuille et paiement", body: <p>Les formules sont facturées au mois et débitées de votre solde au lancement de la campagne. Le solde est alimenté par carte bancaire (Visa, Mastercard) via notre prestataire GeniusPay ; il est crédité dès la confirmation du paiement. Le paiement est encaissé en francs CFA à la parité fixe de 655,957 F CFA pour 1 € ; les frais de paiement par carte, affichés avant validation, s&apos;ajoutent au montant rechargé. Une campagne sans solde suffisant reste en brouillon.</p> },
+        { h: "Portefeuille et paiement", body: <p>Les formules sont facturées au mois et débitées de votre solde au lancement de la campagne. Le solde est alimenté par carte bancaire (Visa, Mastercard) via notre prestataire GeniusPay ; il est crédité dès la confirmation du paiement. Le montant payé est égal au montant crédité : aucun frais de paiement ne vous est facturé. Selon votre banque, votre relevé peut indiquer la contre-valeur en francs CFA, monnaie de notre prestataire, à la parité fixe de 655,957 F CFA pour 1 €. Une campagne sans solde suffisant reste en brouillon.</p> },
         { h: "Pause et arrêt", body: <p>Vous pouvez mettre une campagne en pause ou la reprendre à tout moment depuis votre tableau de bord. Le mois entamé n&apos;est pas remboursé.</p> },
         { h: "Suppression du compte", body: <p>Vous pouvez supprimer votre compte depuis les paramètres. Cette suppression est définitive et entraîne l&apos;effacement de vos campagnes, statistiques et images.</p> },
         { h: "Contact", body: <p>Pour toute question : <a href="mailto:contact@kamply.site">contact@kamply.site</a>.</p> },

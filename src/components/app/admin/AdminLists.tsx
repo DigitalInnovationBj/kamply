@@ -8,7 +8,7 @@ import { ConfirmDialog } from "@/components/app/ConfirmDialog";
 import { TxStatusBadge } from "@/components/app/StatusBadge";
 import { UserAvatar } from "@/components/app/UserAvatar";
 import { processTopup, recheckTopup } from "@/app/actions/admin";
-import { formatDate, formatNumber } from "@/lib/campaigns";
+import { formatDate } from "@/lib/campaigns";
 import { formatEuros } from "@/lib/plans";
 
 type Topup = {
@@ -51,7 +51,7 @@ export function TopupRows({ items }: { items: Topup[] }) {
             <div className="truncate text-[12.5px] text-muted-foreground">
               {t.method === "CARD" && <IconCreditCard size={13} className="mr-1 inline align-[-2px]" />}
               <span className="font-mono font-bold text-foreground">{t.reference}</span>
-              {t.chargedAmount ? ` · ${formatNumber(t.chargedAmount)} F CFA débités` : ""} · {formatDate(t.createdAt, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+ · {formatDate(t.createdAt, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
             </div>
             {t.note && <div className="text-[12.5px] text-muted-foreground">« {t.note} »</div>}
           </div>
