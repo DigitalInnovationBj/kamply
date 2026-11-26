@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { targetingSchema, targetingSummary } from "@/lib/targeting";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { planById } from "@/lib/plans";
@@ -29,8 +30,7 @@ const schema = z.object({
   name: z.string().trim().min(3, "Donnez un nom à votre campagne.").max(60),
   channel: z.enum(["GOOGLE", "META"]),
   objective: z.string().trim().min(3, "Choisissez un objectif."),
-  location: z.string().trim().min(2, "Indiquez une ville ou une région."),
-  radiusKm: z.coerce.number().int().min(0).max(500).optional(),
+  targeting: targetingSchema.refine((t) => t.countries.every((c) => c.mode === "all" || c.cities.length > 0), "Ajoutez au moins une ville pour chaque pays en « Villes précises »."),
   audience: z.string().trim().max(200).optional(),
   keywords: z.array(z.string().trim().min(2).max(60)).max(30).default([]),
   headline: z.string().trim().min(10, "Le titre doit faire au moins 10 caractères.").max(60, "60 caractères maximum."),
@@ -75,8 +75,9 @@ export async function createCampaign(input: CampaignInput): Promise<ActionResult
         name: v.name,
         channel: v.channel,
         objective: v.objective,
-        location: v.location,
-        radiusKm: v.radiusKm ?? null,
+        location: targetingSummary(v.targeting),
+        radiusKm: v.targeting.countries.flatMap((c) => (c.mode === "cities" ? c.cities : []))[0]?.radiusKm ?? null,
+        targeting: { countries: v.targeting.countries.map((c) => ({ code: c.code, mode: c.mode, cities: c.mode === "cities" ? c.cities : [] })) },
         audience: v.audience || null,
         keywords: v.keywords,
         headline: v.headline,

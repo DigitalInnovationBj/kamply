@@ -284,7 +284,7 @@ function NotifyToggle({ checked, onChange, email }: { checked: boolean; onChange
   return (
     <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)} className="flex items-center gap-3 rounded-2xl bg-muted px-4 py-3 text-left">
       <span className={cn("relative h-7 w-12 flex-none rounded-full transition-colors duration-300", checked ? "bg-primary" : "bg-[#c4c4be]")}>
-        <span className={cn("absolute top-1 size-5 rounded-full bg-white shadow transition-transform duration-500 ease-[cubic-bezier(.16,1,.3,1)]", checked ? "translate-x-6" : "translate-x-1")} />
+        <span className={cn("absolute left-0 top-1 size-5 rounded-full bg-white shadow transition-transform duration-500 ease-[cubic-bezier(.16,1,.3,1)]", checked ? "translate-x-6" : "translate-x-1")} />
       </span>
       <span className="min-w-0">
         <span className="block text-sm font-bold">Prévenir par e-mail</span>

@@ -574,3 +574,8 @@
 @keyframes pay-draw { to { stroke-dashoffset: 0; } }
 @keyframes pay-pop { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 100% { transform: scale(1); } }
 @keyframes pay-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-10px); } 40% { transform: translateX(9px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(4px); } }
+
+/* Un champ ne doit jamais imposer sa largeur intrinsèque à sa ligne (débordements mobiles). */
+@layer components {
+  .kf-input { min-width: 0; }
+}

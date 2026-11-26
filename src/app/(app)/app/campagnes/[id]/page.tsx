@@ -75,7 +75,7 @@ export default async function CampaignPage({ params }: PageProps<"/app/campagnes
           <dl className="grid gap-px overflow-hidden rounded-[24px] bg-border text-sm">
             {[
               ["Objectif", c.objective],
-              ["Zone", c.radiusKm ? `${c.location} · ${c.radiusKm} km` : c.location],
+              ["Zone", c.targeting ? c.location : c.radiusKm ? `${c.location} · ${c.radiusKm} km` : c.location],
               [c.channel === "GOOGLE" ? "Mots-clés" : "Centres d'intérêt", c.channel === "GOOGLE" ? c.keywords.join(", ") : c.audience || "Ciblage automatique"],
               ["Destination", c.landingUrl],
               ["Créée le", formatDate(c.createdAt)],

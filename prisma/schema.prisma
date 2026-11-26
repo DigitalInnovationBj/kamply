@@ -128,8 +128,11 @@ model Campaign {
   /// Prix mensuel en centimes d'euro, figé au moment de la création
   monthlyPrice  Int
   objective     String
+  /// Résumé lisible de la zone (ex. « France · Belgique : Bruxelles 20 km »)
   location      String
   radiusKm      Int?
+  /// Zones structurées : { countries: [{ code, mode: "all" | "cities", cities: [{ name, radiusKm }] }] }
+  targeting     Json?
   audience      String?
   keywords      String[]       @default([])
   headline      String

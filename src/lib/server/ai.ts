@@ -77,11 +77,12 @@ const draftJsonSchema = {
     location: {
       type: "object",
       properties: {
+        countries: { type: "array", minItems: 1, maxItems: 8, items: { type: "string", minLength: 2, maxLength: 2 }, description: "Pays de diffusion pertinents, codes ISO 3166-1 alpha-2 en majuscules (ex. FR, BE, CH, CA)." },
         national: { type: "boolean", description: "true si l'entreprise vend en ligne à distance, sans zone locale." },
         city: { type: "string" },
         radiusKm: { type: "integer", minimum: 5, maximum: 100 },
       },
-      required: ["national", "city", "radiusKm"],
+      required: ["countries", "national", "city", "radiusKm"],
     },
     google: {
       type: "object",
@@ -112,7 +113,12 @@ const draftSchema = z.object({
   channel: z.object({ recommended: z.preprocess((v) => String(v ?? "").toUpperCase(), z.enum(["GOOGLE", "META"])).catch("GOOGLE"), reason: cut(160).catch("") }),
   objectives: z.object({ GOOGLE: z.enum(OBJECTIVES.GOOGLE).catch(OBJECTIVES.GOOGLE[1]), META: z.enum(OBJECTIVES.META).catch(OBJECTIVES.META[0]) }),
   campaignName: cut(60).catch("Ma campagne"),
-  location: z.object({ national: z.boolean().catch(false), city: cut(80).catch(""), radiusKm: z.coerce.number().int().min(5).max(100).catch(20) }),
+  location: z.object({
+    countries: z
+      .array(z.string())
+      .transform((a) => [...new Set(a.map((c) => c.trim().toUpperCase()).filter((c) => /^[A-Z]{2}$/.test(c)))].slice(0, 8))
+      .catch([]),
+    national: z.boolean().catch(false), city: cut(80).catch(""), radiusKm: z.coerce.number().int().min(5).max(100).catch(20) }),
   google: z.object({ headlines: z.array(cut(60)).min(1), descriptions: z.array(cut(160)).min(1), keywords: z.array(cut(60).transform((k) => k.toLowerCase())).min(3) }),
   meta: z.object({ headlines: z.array(cut(60)).min(1), texts: z.array(cut(160)).min(1), interests: cut(160).catch("") }),
   confidence: z.enum(["high", "medium", "low"]).catch("medium"),
@@ -229,7 +235,7 @@ const MOCK_DRAFT = {
   channel: { recommended: "GOOGLE", reason: "Vos clients cherchent « fleuriste lyon » au moment d'acheter : Google vous place devant eux à cet instant." },
   objectives: { GOOGLE: "Générer des visites sur le site", META: "Faire connaître ma marque" },
   campaignName: "Bouquets livrés · Lyon",
-  location: { national: false, city: "Lyon", radiusKm: 15 },
+  location: { countries: ["FR"], national: false, city: "Lyon", radiusKm: 15 },
   google: {
     headlines: ["Fleuriste à Lyon, livré le jour même", "Bouquets de saison faits main à Lyon", "Commandez avant 16 h, livré aujourd'hui"],
     descriptions: [

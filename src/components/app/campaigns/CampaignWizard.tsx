@@ -28,6 +28,8 @@ import { SubmitButton, pulseState, type SubmitState } from "@/components/app/for
 import { ConfirmDialog } from "@/components/app/ConfirmDialog";
 import { AdPreview } from "./AdPreview";
 import { SiteStep } from "./SiteStep";
+import { TargetingEditor } from "./TargetingEditor";
+import { targetingSummary, type Targeting } from "@/lib/targeting";
 import { Suggestions } from "./Suggestions";
 import { importSiteImage, regenerate, type Analysis } from "@/app/actions/ai";
 import { uploadToCloudinary, type UploadedImage } from "@/components/app/AvatarUploader";
@@ -38,11 +40,11 @@ import { cn } from "@/lib/utils";
 
 const STEPS = ["Canal", "Objectif", "Zone", "Annonce", "Formule", "Récapitulatif"] as const;
 
-type Props = { company: string; website?: string | null; balance: number; aiEnabled: boolean };
+type Props = { company: string; website?: string | null; balance: number; aiEnabled: boolean; defaultCountry?: string | null };
 
 type Pool = { GOOGLE: { headline: string[]; description: string[] }; META: { headline: string[]; description: string[] }; keywords: string[]; interests: string[] };
 
-export function CampaignWizard({ company, website, balance, aiEnabled }: Props) {
+export function CampaignWizard({ company, website, balance, aiEnabled, defaultCountry }: Props) {
   const router = useRouter();
   const O = aiEnabled ? 1 : 0;
   const steps: readonly string[] = aiEnabled ? ["Votre site", ...STEPS] : STEPS;
@@ -56,9 +58,7 @@ export function CampaignWizard({ company, website, balance, aiEnabled }: Props) 
   const [channel, setChannel] = useState<ChannelKey | null>(null);
   const [objective, setObjective] = useState("");
   const [name, setName] = useState("");
-  const [location, setLocation] = useState("");
-  const [radius, setRadius] = useState(20);
-  const [national, setNational] = useState(false);
+  const [targeting, setTargeting] = useState<Targeting>({ countries: defaultCountry ? [{ code: defaultCountry, mode: "all", cities: [] }] : [] });
   const [audience, setAudience] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
   const [kw, setKw] = useState("");
@@ -87,9 +87,12 @@ export function CampaignWizard({ company, website, balance, aiEnabled }: Props) 
     setChannel(ch);
     setObjective(d.objectives[ch]);
     setName(d.campaignName);
-    setNational(d.location.national);
-    setLocation(d.location.city || d.business.city);
-    setRadius(Math.min(100, Math.max(5, Math.round(d.location.radiusKm / 5) * 5)));
+    const codes = d.location.countries.length ? d.location.countries : defaultCountry ? [defaultCountry] : ["FR"];
+    const city = d.location.city || d.business.city;
+    const radius = Math.min(100, Math.max(5, Math.round(d.location.radiusKm / 5) * 5));
+    setTargeting({
+      countries: codes.map((code, i) => (!d.location.national && i === 0 && city ? { code, mode: "cities", cities: [{ name: city, radiusKm: radius }] } : { code, mode: "all", cities: [] })),
+    });
     setKeywords(d.google.keywords.slice(0, 12));
     setAudience(d.meta.interests);
     setHeadline(ch === "GOOGLE" ? d.google.headlines[0] : d.meta.headlines[0]);
@@ -148,7 +151,8 @@ export function CampaignWizard({ company, website, balance, aiEnabled }: Props) 
       if (name.trim().length < 3) e.name = "Donnez un nom à votre campagne (3 caractères minimum).";
     }
     if (s === 2 + O) {
-      if (!national && location.trim().length < 2) e.location = "Indiquez une ville ou une région.";
+      if (!targeting.countries.length) e.targeting = "Choisissez au moins un pays.";
+      else if (targeting.countries.some((c) => c.mode === "cities" && !c.cities.length)) e.targeting = "Ajoutez au moins une ville pour chaque pays en « Villes précises ».";
       if (channel === "GOOGLE" && keywords.length < 3) e.keywords = "Ajoutez au moins 3 mots-clés.";
     }
     if (s === 3 + O) {
@@ -205,8 +209,7 @@ export function CampaignWizard({ company, website, balance, aiEnabled }: Props) 
       name,
       channel: channel!,
       objective,
-      location: national ? "National" : location,
-      radiusKm: national ? undefined : radius,
+      targeting,
       audience: channel === "META" ? audience : undefined,
       keywords: channel === "GOOGLE" ? keywords : [],
       headline,
@@ -235,7 +238,7 @@ export function CampaignWizard({ company, website, balance, aiEnabled }: Props) 
   const preview = <AdPreview channel={channel ?? "META"} company={company} headline={headline} description={description} landingUrl={landingUrl} imageUrl={image?.url} />;
 
   return (
-    <div ref={topRef} className="scroll-mt-24">
+    <div ref={topRef} className={cn("scroll-mt-24", step >= 3 + O && "pb-16 lg:pb-0")}>
       {/* Progression */}
       <div className="rise mb-6">
         <div className="flex items-center justify-between text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
@@ -351,49 +354,14 @@ export function CampaignWizard({ company, website, balance, aiEnabled }: Props) 
 
           {step === 2 + O && (
             <Step title="Qui doit voir votre annonce ?" text="Plus la zone est précise, plus le budget est efficace.">
-              <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl bg-muted px-4 py-3.5">
-                <span>
-                  <span className="block text-[15px] font-bold">Diffuser dans tout le pays</span>
-                  <span className="block text-[13px] text-muted-foreground">Idéal pour la vente en ligne avec livraison.</span>
-                </span>
-                <Switch checked={national} onChange={setNational} label="Diffuser dans tout le pays" />
-              </label>
-              {!national && (
-                <div className="mt-5 grid gap-5">
-                  <Field
-                    label="Ville ou région"
-                    icon={<IconMapPin size={20} stroke={2} />}
-                    placeholder="Lyon"
-                    autoComplete="address-level2"
-                    value={location}
-                    onChange={(e) => {
-                      setLocation(e.target.value);
-                      clear("location");
-                    }}
-                    error={errors.location}
-                  />
-                  <div className="grid gap-3">
-                    <div className="flex items-center justify-between">
-                      <span className="kf-label">Rayon autour</span>
-                      <span className="rounded-full bg-black px-3 py-1 text-sm font-bold tabular-nums text-[#f5f5f3]">{radius} km</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={5}
-                      max={100}
-                      step={5}
-                      value={radius}
-                      onChange={(e) => setRadius(Number(e.target.value))}
-                      className="h-2 w-full cursor-pointer accent-[#ff5b23]"
-                      aria-label="Rayon autour de la ville, en kilomètres"
-                    />
-                    <div className="flex justify-between text-xs font-semibold text-muted-foreground">
-                      <span>5 km</span>
-                      <span>100 km</span>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <TargetingEditor
+                value={targeting}
+                onChange={(v) => {
+                  setTargeting(v);
+                  clear("targeting");
+                }}
+                error={errors.targeting}
+              />
 
               {channel === "GOOGLE" ? (
                 <div className="mt-6 grid gap-2" data-invalid={!!errors.keywords}>
@@ -649,7 +617,7 @@ export function CampaignWizard({ company, website, balance, aiEnabled }: Props) 
                   ["Canal", channel === "GOOGLE" ? "Google Ads" : "Meta Ads", 0 + O],
                   ["Objectif", objective, 1 + O],
                   ["Nom", name, 1 + O],
-                  ["Zone", national ? "Tout le pays" : `${location} · ${radius} km`, 2 + O],
+                  ["Zone", targetingSummary(targeting), 2 + O],
                   [channel === "GOOGLE" ? "Mots-clés" : "Centres d'intérêt", channel === "GOOGLE" ? keywords.join(", ") : audience || "Ciblage automatique", 2 + O],
                   ["Titre", headline, 3 + O],
                   ["Destination", landingUrl, 3 + O],
@@ -776,24 +744,6 @@ function Choice({ selected, onClick, children }: { selected: boolean; onClick: (
         </span>
       )}
       {children}
-    </button>
-  );
-}
-
-function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={(e) => {
-        e.preventDefault();
-        onChange(!checked);
-      }}
-      className={cn("relative h-8 w-14 flex-none rounded-full transition-colors duration-300", checked ? "bg-primary" : "bg-[#c4c4be]")}
-    >
-      <span className={cn("absolute top-1 size-6 rounded-full bg-white shadow transition-transform duration-500 ease-[cubic-bezier(.16,1,.3,1)]", checked ? "translate-x-7" : "translate-x-1")} />
     </button>
   );
 }
