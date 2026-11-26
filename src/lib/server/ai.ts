@@ -1,12 +1,24 @@
 import "server-only";
-import { GoogleGenAI } from "@google/genai";
+import { ApiError, GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 import { OBJECTIVES } from "@/lib/campaigns";
 import { SECTORS } from "@/lib/sectors";
 import type { SiteDigest } from "./site-reader";
 
 /** Modèle configurable ; l'alias « latest » suit la dernière version Flash de Gemini. */
-const MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
+const MODEL = process.env.GEMINI_MODEL?.trim() || "gemini-flash-latest";
+/** Modèles de secours si le modèle choisi est introuvable ou indisponible. */
+const FALLBACK_MODELS = ["gemini-flash-lite-latest", "gemini-flash-latest", "gemini-2.5-flash"];
+
+/** Erreur IA typée : le code permet d'afficher un message adapté au client. */
+export class AiError extends Error {
+  constructor(
+    public code: "QUOTA" | "AUTH" | "UNAVAILABLE" | "INVALID_OUTPUT",
+    message: string,
+  ) {
+    super(message);
+  }
+}
 
 /** Réponses factices pour les tests locaux sans clé (AI_MOCK=1, jamais en production réelle). */
 export const aiMock = () => process.env.AI_MOCK === "1" && !(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
@@ -95,13 +107,13 @@ const draftJsonSchema = {
 
 const cut = (max: number) => z.string().transform((v) => v.replace(/\s+/g, " ").trim().slice(0, max));
 const draftSchema = z.object({
-  business: z.object({ name: cut(60), sector: z.enum(SECTORS).catch("Autre"), city: cut(80), summary: cut(220) }),
-  channel: z.object({ recommended: z.enum(["GOOGLE", "META"]), reason: cut(160) }),
+  business: z.object({ name: cut(60).catch(""), sector: z.enum(SECTORS).catch("Autre"), city: cut(80).catch(""), summary: cut(220).catch("") }),
+  channel: z.object({ recommended: z.preprocess((v) => String(v ?? "").toUpperCase(), z.enum(["GOOGLE", "META"])).catch("GOOGLE"), reason: cut(160).catch("") }),
   objectives: z.object({ GOOGLE: z.enum(OBJECTIVES.GOOGLE).catch(OBJECTIVES.GOOGLE[1]), META: z.enum(OBJECTIVES.META).catch(OBJECTIVES.META[0]) }),
-  campaignName: cut(60),
-  location: z.object({ national: z.boolean(), city: cut(80), radiusKm: z.number().int().min(5).max(100).catch(20) }),
+  campaignName: cut(60).catch("Ma campagne"),
+  location: z.object({ national: z.boolean().catch(false), city: cut(80).catch(""), radiusKm: z.coerce.number().int().min(5).max(100).catch(20) }),
   google: z.object({ headlines: z.array(cut(60)).min(1), descriptions: z.array(cut(160)).min(1), keywords: z.array(cut(60).transform((k) => k.toLowerCase())).min(3) }),
-  meta: z.object({ headlines: z.array(cut(60)).min(1), texts: z.array(cut(160)).min(1), interests: cut(160) }),
+  meta: z.object({ headlines: z.array(cut(60)).min(1), texts: z.array(cut(160)).min(1), interests: cut(160).catch("") }),
   confidence: z.enum(["high", "medium", "low"]).catch("medium"),
 });
 export type CampaignDraft = z.infer<typeof draftSchema>;
@@ -123,15 +135,54 @@ function digestPrompt(d: SiteDigest) {
     .join("\n\n");
 }
 
+function parseJson(text: string): unknown {
+  const clean = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
+  try {
+    return JSON.parse(clean);
+  } catch {
+    const start = clean.indexOf("{");
+    const end = clean.lastIndexOf("}");
+    if (start >= 0 && end > start) return JSON.parse(clean.slice(start, end + 1));
+    throw new AiError("INVALID_OUTPUT", "Réponse IA illisible.");
+  }
+}
+
+function describe(e: unknown) {
+  if (e instanceof ApiError) return `${e.status} ${e.message}`.slice(0, 400);
+  return e instanceof Error ? e.message.slice(0, 400) : String(e);
+}
+
+/**
+ * Appel Gemini en JSON. Repli automatique : sans schéma strict si le modèle le refuse,
+ * puis sur un modèle de secours si le modèle demandé est introuvable ou surchargé.
+ */
 async function generateJson(prompt: string, schema: object, temperature: number) {
-  const res = await ai().models.generateContent({
-    model: MODEL,
-    contents: prompt,
-    config: { systemInstruction: SYSTEM, responseMimeType: "application/json", responseJsonSchema: schema, temperature },
-  });
-  const text = res.text;
-  if (!text) throw new Error("AI_EMPTY");
-  return JSON.parse(text) as unknown;
+  const models = [MODEL, ...FALLBACK_MODELS.filter((m) => m !== MODEL)];
+  let last: unknown;
+  for (const model of models) {
+    for (const strict of [true, false]) {
+      try {
+        const res = await ai().models.generateContent({
+          model,
+          contents: strict ? prompt : `${prompt}\n\nRéponds uniquement avec un objet JSON valide respectant ce schéma :\n${JSON.stringify(schema)}`,
+          config: { systemInstruction: SYSTEM, responseMimeType: "application/json", ...(strict ? { responseJsonSchema: schema } : {}), temperature },
+        });
+        if (!res.text) throw new AiError("INVALID_OUTPUT", "Réponse IA vide.");
+        return parseJson(res.text);
+      } catch (e) {
+        last = e;
+        console.error(`[ai] ${model}${strict ? "" : " (sans schéma)"} : ${describe(e)}`);
+        const status = e instanceof ApiError ? e.status : 0;
+        if (status === 401 || status === 403 || (status === 400 && /api key/i.test(describe(e)))) throw new AiError("AUTH", "Clé Gemini refusée.");
+        if (status === 429) throw new AiError("QUOTA", "Quota Gemini atteint.");
+        // 400 : schéma refusé → on retente sans schéma ; 404 / 5xx → modèle suivant.
+        if (status === 400 && strict) continue;
+        break;
+      }
+    }
+  }
+  if (last instanceof AiError) throw last;
+  throw new AiError("UNAVAILABLE", describe(last));
 }
 
 /** Brouillon complet de campagne à partir du contenu du site. */

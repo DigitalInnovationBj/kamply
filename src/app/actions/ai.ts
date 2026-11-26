@@ -4,7 +4,7 @@ import { v2 as cloudinary } from "cloudinary";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
-import { aiMock, aiReady, digestContext, draftFromSite, moreVariants, type CampaignDraft, type VariantField } from "@/lib/server/ai";
+import { AiError, aiMock, aiReady, digestContext, draftFromSite, moreVariants, type CampaignDraft, type VariantField } from "@/lib/server/ai";
 import { readSite, SiteReadError, type SiteDigest } from "@/lib/server/site-reader";
 import { cloudinaryReady } from "@/lib/server/cloudinary";
 import type { UploadedImage } from "@/components/app/AvatarUploader";
@@ -66,9 +66,16 @@ export async function analyzeSite(input: { url?: string; description?: string })
     try {
       draft = await draftFromSite(digest, user.companyName);
     } catch (e) {
-      console.error("[ai] génération impossible :", e);
+      console.error("[ai] génération impossible :", e instanceof Error ? e.message : e);
       await db.aiRun.create({ data: { userId: user.id, kind: "analyze", url: digest.url || null, ok: false } });
-      return { ok: false, code: "AI_FAILED", error: "La rédaction automatique a échoué. Réessayez dans un instant." };
+      const code = e instanceof AiError ? e.code : "UNAVAILABLE";
+      const error =
+        code === "QUOTA"
+          ? "La rédaction automatique est très demandée en ce moment. Réessayez dans quelques minutes, ou remplissez votre campagne vous-même."
+          : code === "AUTH"
+            ? "La rédaction automatique est momentanément indisponible. Remplissez votre campagne vous-même, nous corrigeons le problème."
+            : "La rédaction automatique a échoué. Réessayez dans un instant.";
+      return { ok: false, code: `AI_${code}`, error };
     }
     await db.aiRun.create({ data: { userId: user.id, kind: "analyze", url: digest.url || null } });
     return { ok: true, data: { draft, context: digestContext(digest, draft), images: digest.images, host: digest.host || null, phone: digest.phones[0] ?? null, source } };
