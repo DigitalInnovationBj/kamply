@@ -30,7 +30,8 @@ export function aiReady() {
 let client: GoogleGenAI | null = null;
 function ai() {
   if (!aiReady()) throw new Error("AI_NOT_CONFIGURED");
-  client ??= new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY });
+  // v1beta : requis pour les alias « -latest » et les réponses JSON à schéma (le SDK vise v1 par défaut).
+  client ??= new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY, apiVersion: process.env.GEMINI_API_VERSION || "v1beta" });
   return client;
 }
 
